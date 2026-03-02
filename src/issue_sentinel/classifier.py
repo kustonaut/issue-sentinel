@@ -34,7 +34,7 @@ class ClassificationResult:
     reasoning: str = ""
     method: str = "rule-based"  # rule-based | llm
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Serialize to dictionary."""
         return {
             "category": self.category,
