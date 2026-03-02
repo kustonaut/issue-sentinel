@@ -56,6 +56,9 @@ Each issue needs **classification**, **routing**, **urgency scoring**, and a **s
 | 🔄 | **GitHub Actions** | Drop-in action: auto-triage on every `issues.opened` event |
 | 📊 | **Decision Logging** | JSONL audit trail — track accuracy, tune rules over time |
 | ⚙️ | **YAML Config** | Define areas, keywords, routing rules, urgency thresholds |
+| 🔌 | **MCP Server** | Expose triage as AI-callable tools for Claude, Copilot, and custom agents |
+| 📈 | **HTML Reports** | Interactive triage dashboards with tabbed views and urgency heatmaps |
+| 🔗 | **Multi-Repo** | Triage across multiple repositories with shared or per-repo config |
 
 ---
 
@@ -321,7 +324,114 @@ Issue arrives
 
 ---
 
-## 💡 Why This Exists
+## � MCP Server (AI Agent Integration)
+
+Expose Issue Sentinel as an **MCP (Model Context Protocol) server** — any AI agent (Claude, Copilot, custom) can call triage tools programmatically.
+
+*Inspired by [Kusto-Language-Server](https://github.com/microsoft/kusto-language-server)'s Copilot tool integration pattern.*
+
+```bash
+# Start MCP server (stdio transport)
+issue-sentinel mcp-serve --config config.yaml
+```
+
+**Available tools:**
+
+| Tool | Description |
+|------|-------------|
+| `triage_issue` | Classify a single issue by text or GitHub reference |
+| `triage_batch` | Bulk-triage open issues in a repository |
+| `analyze_urgency` | Score urgency (0-1) with signal detection |
+| `analyze_sentiment` | Sentiment analysis with triggered signals |
+| `get_config` | Return current configuration |
+
+**Programmatic usage:**
+
+```python
+from issue_sentinel.mcp_server import create_server
+
+server = create_server(config_path="config.yaml")
+response = server.handle_message({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+        "name": "triage_issue",
+        "arguments": {"title": "App crashes on startup", "body": "NullPointerException..."}
+    }
+})
+```
+
+---
+
+## 📈 HTML Reports
+
+Generate interactive triage dashboards with tabbed views — summary stats, issue cards, urgency heatmaps.
+
+*Inspired by [Kusto-Language-Server](https://github.com/microsoft/kusto-language-server)'s tabbed results panel.*
+
+```bash
+# Generate HTML report from a repo
+issue-sentinel report --repo owner/repo --limit 50 --theme dark -o report.html
+```
+
+**Python API:**
+
+```python
+from issue_sentinel.report import generate_report
+
+html = generate_report(results, repo="owner/repo", theme="dark", output_path="report.html")
+```
+
+**Report tabs:** 📊 Summary (stat cards + bar charts) · 📋 Issues (sorted cards) · 🔥 Urgency (heatmap table) · ⚙️ Config
+
+---
+
+## 🔗 Multi-Repo Triage
+
+Triage issues across multiple repositories from a single config — shared defaults with per-repo overrides.
+
+*Inspired by [Kusto-Language-Server](https://github.com/microsoft/kusto-language-server)'s multi-cluster connection management.*
+
+```yaml
+# config.yaml — multi-repo setup
+areas:
+  - name: api
+    keywords: [api, rest, endpoint]
+
+repos:
+  - repo: owner/repo-a
+    apply_labels: true
+    max_issues: 50
+  - repo: owner/repo-b
+    enabled: false
+  - repo: owner/repo-c
+    areas:                    # per-repo area overrides
+      - name: mobile
+        keywords: [ios, android]
+```
+
+```bash
+# Triage all enabled repos
+issue-sentinel triage-repos --config config.yaml --dry-run
+
+# With HTML report
+issue-sentinel triage-repos --config config.yaml -o multi_report.html
+```
+
+**Python API:**
+
+```python
+from issue_sentinel.multi_repo import MultiRepoManager
+
+manager = MultiRepoManager.from_yaml("config.yaml")
+results = manager.triage_all(dry_run=True)
+manager.generate_report(results, output_path="dashboard.html")
+```
+
+---
+
+## �💡 Why This Exists
 
 ```
 Problem:  100+ issues/week × 5 repos × 2 min/triage = 16 hours/week
@@ -358,6 +468,17 @@ MIT — see [LICENSE](LICENSE)
 
 ---
 
+## 🙏 Acknowledgments
+
+The MCP server, HTML report generator, and multi-repo support were inspired by architectural patterns in Microsoft's [Kusto-Language-Server](https://github.com/microsoft/kusto-language-server) (MIT licensed):
+
+- **Copilot tool registration** → MCP server exposing triage as AI-callable tools
+- **Tabbed results panel + HtmlBuilder** → Self-contained HTML dashboard with tab switching
+- **Multi-cluster connection management** → Multi-repo config with shared defaults and per-repo overrides
+- **Release CI workflow** → Tag-triggered GitHub Release automation
+
+---
+
 <div align="center">
 
 **Part of the [PM OS](https://github.com/kustonaut) ecosystem** — tools built by a PM who codes.
@@ -365,11 +486,11 @@ MIT — see [LICENSE](LICENSE)
 [**🎮 Try the Interactive Demo →**](https://kustonaut.github.io/issue-sentinel)
 
 ```
-      /\
-     /  \       issue-sentinel
-    / 🛡️ \      "sleep well, your issues are triaged"
-   /------\
-  /________\
+        /\
+       /  \        issue-sentinel
+      / ** \       "sleep well, your issues are triaged"
+     /------\
+    /________\
 ```
 
 </div>
