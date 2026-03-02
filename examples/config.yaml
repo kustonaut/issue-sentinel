@@ -1,0 +1,57 @@
+# Issue Sentinel — Example Configuration
+# Copy this file to your repo root as 'issue-sentinel.yaml'
+
+# Product areas to classify issues into
+areas:
+  - name: backend
+    keywords: ["api", "server", "database", "auth", "endpoint", "rest", "graphql"]
+    owners: ["@backend-team"]
+    description: "Backend / API issues"
+
+  - name: frontend
+    keywords: ["ui", "button", "css", "layout", "react", "component", "responsive"]
+    owners: ["@frontend-team"]
+    description: "Frontend / UI issues"
+
+  - name: docs
+    keywords: ["documentation", "readme", "tutorial", "example", "guide"]
+    owners: ["@docs-team"]
+    description: "Documentation issues"
+
+  - name: infra
+    keywords: ["deploy", "docker", "ci", "kubernetes", "config", "pipeline"]
+    owners: ["@platform-team"]
+    description: "Infrastructure / DevOps issues"
+
+  - name: mobile
+    keywords: ["ios", "android", "mobile", "app", "responsive", "touch"]
+    owners: ["@mobile-team"]
+    description: "Mobile app issues"
+
+# Urgency scoring configuration
+urgency:
+  high_signals:
+    - regression
+    - crash
+    - data loss
+    - security
+    - breaking change
+    - blocker
+    - production down
+    - critical
+  escalation_threshold: 0.8
+
+# Classification engine settings
+classification:
+  provider: "rule-based"       # rule-based | openai | anthropic
+  model: "gpt-4o-mini"        # used when provider is openai/anthropic
+  fallback: "rule-based"       # fallback if LLM fails
+  temperature: 0.1             # low temp for consistent classification
+  api_key: ""                  # set via OPENAI_API_KEY env var preferred
+
+# Label application settings
+labels:
+  apply: true
+  prefix: ""                   # e.g., "triage/" → "triage/bug"
+  include_urgency: true        # adds p0/p1/p2/p3 labels
+  include_sentiment: false     # adds sentiment:frustrated etc.

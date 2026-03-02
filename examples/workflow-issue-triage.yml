@@ -1,0 +1,26 @@
+# Example: Auto-triage new issues with Issue Sentinel
+#
+# Copy this file to .github/workflows/issue-triage.yml in YOUR repo.
+# Optionally create .github/issue-sentinel.yaml for custom areas/config.
+
+name: Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: kustonaut/issue-sentinel@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          apply-labels: 'true'
+          post-comment: 'false'
+          # config: '.github/issue-sentinel.yaml'  # uncomment if you have a custom config

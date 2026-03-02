@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue Sentinel — Live Demo</title>
+    <meta name="description" content="AI-powered GitHub issue triage. Try the interactive demo — classify issues by type, urgency, and sentiment in real time.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-hover: #1c2333;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --orange: #db6d28;
+            --red: #f85149;
+            --purple: #bc8cff;
+            --radius: 8px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────── */
+        .hero {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #161b22 0%, var(--bg) 100%);
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .hero h1 span { color: var(--accent); }
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .badge-row {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        /* ── Main Layout ────────────────────────── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        /* ── Cards ──────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ── Form ──────────────────────────────── */
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.6rem 0.8rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        textarea { resize: vertical; min-height: 120px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.5rem;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn:hover { background: var(--accent-hover); }
+        .btn-secondary {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ── Results ────────────────────────────── */
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .result-cell {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.8rem;
+        }
+        .result-cell .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+        .result-cell .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Urgency bar */
+        .urgency-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.4rem;
+        }
+        .urgency-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Labels */
+        .label-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+        .label-tag {
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .label-tag.type { border-color: var(--accent); color: var(--accent); }
+        .label-tag.area { border-color: var(--purple); color: var(--purple); }
+        .label-tag.urgency { border-color: var(--red); color: var(--red); }
+        .label-tag.sentiment { border-color: var(--yellow); color: var(--yellow); }
+
+        /* Confidence meter */
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .confidence-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: var(--green);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        /* Reasoning */
+        .reasoning {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.8rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+        .reasoning strong { color: var(--text); }
+
+        /* Signals list */
+        .signals {
+            margin-top: 0.75rem;
+        }
+        .signals summary {
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .signals ul {
+            list-style: none;
+            margin-top: 0.5rem;
+        }
+        .signals li {
+            font-size: 0.8rem;
+            padding: 0.2rem 0;
+            color: var(--text-muted);
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        /* Hidden state */
+        .hidden { display: none !important; }
+
+        /* ── Samples ────────────────────────────── */
+        .samples { margin-top: 1.5rem; }
+        .sample-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.6rem 0.8rem;
+            color: var(--text);
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+        .sample-btn:hover { border-color: var(--accent); }
+        .sample-btn .sample-type {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Footer ─────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* ── How it works ───────────────────────── */
+        .how-it-works {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+        }
+        .pipeline {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            padding: 1rem 0;
+        }
+        .pipeline-step {
+            flex: 1;
+            min-width: 140px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+        .pipeline-step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+        .pipeline-step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+        .pipeline-step .step-num {
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+        .pipeline-step .step-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .pipeline-step .step-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+        .pipeline-arrow {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            padding: 0 0.3rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Hero ──────────────────────────────────────── -->
+<header class="hero">
+    <h1>🛡️ Issue <span>Sentinel</span></h1>
+    <p>AI-powered GitHub issue triage. Classify, prioritize, and route issues automatically — try it live.</p>
+    <div class="badge-row">
+        <span class="badge">Python 3.10+</span>
+        <span class="badge">Rule-Based + LLM</span>
+        <span class="badge">Zero Config</span>
+        <span class="badge">MIT License</span>
+    </div>
+</header>
+
+<!-- ── Pipeline Visualization ───────────────────── -->
+<section class="how-it-works">
+    <div class="pipeline">
+        <div class="pipeline-step">
+            <div class="step-num">Step 1</div>
+            <div class="step-name">📥 Input</div>
+            <div class="step-desc">Issue title + body</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+            <div class="step-num">Step 2</div>
+            <div class="step-name">🏷️ Classify</div>
+            <div class="step-desc">35+ regex patterns</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+            <div class="step-num">Step 3</div>
+            <div class="step-name">🎯 Urgency</div>
+            <div class="step-desc">Security, regression, P0</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+            <div class="step-num">Step 4</div>
+            <div class="step-name">💬 Sentiment</div>
+            <div class="step-desc">Frustrated → Positive</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+            <div class="step-num">Step 5</div>
+            <div class="step-name">📊 Action</div>
+            <div class="step-desc">Labels + routing</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Main Content ─────────────────────────────── -->
+<main class="container">
+
+    <!-- Left: Input -->
+    <div class="card">
+        <h2>📝 Paste an Issue</h2>
+        <label for="issue-title">Title</label>
+        <input type="text" id="issue-title" placeholder="e.g., API returns 500 on login endpoint">
+
+        <label for="issue-body">Body</label>
+        <textarea id="issue-body" placeholder="Describe the issue..."></textarea>
+
+        <div class="btn-row">
+            <button class="btn" onclick="classifyIssue()">🔍 Classify</button>
+            <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+
+        <div class="samples">
+            <label>Try a sample</label>
+            <button class="sample-btn" onclick="loadSample(0)">
+                <div class="sample-type">🐛 Bug Report</div>
+                API returns 500 on login endpoint
+            </button>
+            <button class="sample-btn" onclick="loadSample(1)">
+                <div class="sample-type">🔴 Security Vulnerability</div>
+                Remote code execution via auth bypass
+            </button>
+            <button class="sample-btn" onclick="loadSample(2)">
+                <div class="sample-type">😤 Frustrated User</div>
+                STILL broken after 6 months! Unacceptable!
+            </button>
+            <button class="sample-btn" onclick="loadSample(3)">
+                <div class="sample-type">✨ Feature Request</div>
+                Add dark mode support for the dashboard
+            </button>
+            <button class="sample-btn" onclick="loadSample(4)">
+                <div class="sample-type">🔄 Regression</div>
+                Chart rendering broke after upgrading to v3
+            </button>
+        </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="card">
+        <h2>📊 Classification Result</h2>
+
+        <div id="results-placeholder" style="text-align:center; padding: 3rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
+            <p>Enter an issue title and body, then click <strong>Classify</strong> to see results.</p>
+        </div>
+
+        <div id="results-content" class="hidden">
+            <div class="result-grid">
+                <div class="result-cell">
+                    <div class="label">Type</div>
+                    <div class="value" id="r-type">—</div>
+                </div>
+                <div class="result-cell">
+                    <div class="label">Area</div>
+                    <div class="value" id="r-area">—</div>
+                </div>
+                <div class="result-cell">
+                    <div class="label">Sentiment</div>
+                    <div class="value" id="r-sentiment">—</div>
+                </div>
+                <div class="result-cell">
+                    <div class="label">Priority</div>
+                    <div class="value" id="r-priority">—</div>
+                </div>
+            </div>
+
+            <!-- Urgency bar -->
+            <div style="margin-bottom: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>Urgency</span>
+                    <span id="r-urgency-pct">0%</span>
+                </div>
+                <div class="urgency-bar">
+                    <div class="urgency-fill" id="r-urgency-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Confidence -->
+            <div style="margin-bottom: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>Confidence</span>
+                    <span id="r-confidence-pct">0%</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="r-confidence-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Labels -->
+            <div>
+                <div class="label">Suggested Labels</div>
+                <div class="label-list" id="r-labels"></div>
+            </div>
+
+            <!-- Reasoning -->
+            <div class="reasoning" id="r-reasoning"></div>
+
+            <!-- Signals -->
+            <details class="signals" id="r-signals-section">
+                <summary>View triggered signals</summary>
+                <ul id="r-signals"></ul>
+            </details>
+        </div>
+    </div>
+</main>
+
+<!-- ── Footer ───────────────────────────────────── -->
+<footer class="footer">
+    <p>
+        <strong>Issue Sentinel</strong> by <a href="https://github.com/kustonaut" target="_blank">@kustonaut</a>
+        · <a href="https://github.com/kustonaut/issue-sentinel" target="_blank">GitHub</a>
+        · <a href="https://pypi.org/project/issue-sentinel/" target="_blank">PyPI</a>
+        · MIT License
+    </p>
+    <p style="margin-top:0.5rem; font-size:0.8rem;">
+        Built by a PM who manages 6,000+ GitHub issues. This demo runs entirely in your browser — no data is sent anywhere.
+    </p>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// Issue Sentinel — Client-Side Classification Engine
+// This is a JavaScript port of the Python rule-based classifier.
+// ══════════════════════════════════════════════════════════════════════════
+
+const SAMPLES = [
+    {
+        title: "API returns 500 on login endpoint",
+        body: "When I call the /auth/login endpoint after upgrading to v3, the server crashes with a 500 Internal Server Error. Stack trace points to a null reference in the auth middleware. This was working in v2.9."
+    },
+    {
+        title: "Remote code execution via auth bypass — CVE-2026-12345",
+        body: "Critical security vulnerability: unauthenticated users can execute arbitrary code by sending crafted payloads to the /api/eval endpoint. Production systems are affected. ASAP fix needed."
+    },
+    {
+        title: "STILL broken after 6 months! This is unacceptable!",
+        body: "I reported this bug months ago and it's STILL NOT FIXED. This is terrible! I've wasted days debugging this. FIX THIS ASAP! Our entire team is blocked."
+    },
+    {
+        title: "Please add dark mode support for the dashboard",
+        body: "It would be great to have a dark theme option. The current white background is harsh at night. I'd be happy to contribute a PR if you'd accept it."
+    },
+    {
+        title: "Chart rendering broke after upgrading to v3",
+        body: "Charts were working perfectly in v2.9. After upgrading to v3.0, all chart colors are wrong and some charts crash. This is a regression — worked before, broken now."
+    }
+];
+
+// ── Pattern Definitions (mirrored from Python) ──────────────────────
+
+const BUG_PATTERNS = [
+    /\b(bug|defect)\b/i, /\berror\b/i, /\bcrash(es|ed|ing)?\b/i,
+    /\bfail(s|ed|ure|ing)?\b/i, /\bbroken\b/i, /\bnot\s+work(ing)?\b/i,
+    /\bunexpected(ly)?\b/i, /\bincorrect(ly)?\b/i, /\bwrong\b/i,
+    /\binvalid\b/i, /\bthrows?\b/i, /\bexception\b/i
+];
+
+const FEATURE_PATTERNS = [
+    /\bfeature\s+request\b/i, /\bplease\s+add\b/i, /\bwould\s+be\s+(nice|great|helpful)\b/i,
+    /\bsupport\s+for\b/i, /\bnew\s+feature\b/i, /\benhance(ment)?\b/i,
+    /\bproposal\b/i, /\bwish\b/i, /\bimplement\b/i
+];
+
+const QUESTION_PATTERNS = [
+    /\bhow\s+(do|can|to)\b/i, /\bwhat\s+is\b/i, /\bis\s+it\s+possible\b/i,
+    /\bquestion\b/i, /\bhelp\s+(me|with|needed)\b/i, /\bdocumentation\b/i,
+    /\bexample\b/i, /\btutorial\b/i
+];
+
+const REGRESSION_PATTERNS = [
+    /\bregression\b/i, /\bused\s+to\s+work\b/i, /\bwas\s+working\b/i,
+    /\bbroke(n)?\s+after\b/i, /\bworked\s+before\b/i, /\bafter\s+upgrad/i
+];
+
+const DOCS_PATTERNS = [
+    /\bdoc(umentation|s)?\b/i, /\breadme\b/i, /\btutorial\b/i, /\bexample\b/i
+];
+
+// ── Urgency Signal Definitions ──────────────────────────────────────
+
+const CRITICAL_SIGNALS = [
+    { re: /\bsecurity\s*(vuln|issue|bug|hole|breach)\b/i, w: 0.9, d: "security vulnerability" },
+    { re: /\bdata\s*loss\b/i, w: 0.9, d: "data loss" },
+    { re: /\bproduction\s*(down|outage|crash|issue)\b/i, w: 0.9, d: "production impact" },
+    { re: /\bCVE-\d{4}-\d+\b/i, w: 0.9, d: "CVE reference" },
+    { re: /\b(remote|arbitrary)\s*code\s*execution\b/i, w: 1.0, d: "RCE" },
+];
+const HIGH_SIGNALS = [
+    { re: /\bregression\b/i, w: 0.7, d: "regression" },
+    { re: /\bbreaking\s*change\b/i, w: 0.7, d: "breaking change" },
+    { re: /\bcrash(es|ed|ing)?\b/i, w: 0.6, d: "crash" },
+    { re: /\bblocking\b/i, w: 0.6, d: "blocking" },
+    { re: /\bblocker\b/i, w: 0.7, d: "blocker" },
+    { re: /\bcritical\b/i, w: 0.6, d: "marked critical" },
+    { re: /\burgent(ly)?\b/i, w: 0.5, d: "marked urgent" },
+    { re: /\bASAP\b/i, w: 0.5, d: "ASAP" },
+    { re: /\bP0\b/, w: 0.8, d: "P0" },
+    { re: /\bP1\b/, w: 0.6, d: "P1" },
+];
+const MEDIUM_SIGNALS = [
+    { re: /\bno\s*workaround\b/i, w: 0.5, d: "no workaround" },
+    { re: /\bmultiple\s*(users?|people|customers?|teams?)\b/i, w: 0.4, d: "multiple affected" },
+    { re: /\brelease\s*(block|deadline)\b/i, w: 0.5, d: "release deadline" },
+];
+const LOW_SIGNALS = [
+    { re: /\bnice\s*to\s*have\b/i, w: -0.2, d: "nice to have" },
+    { re: /\blow\s*priority\b/i, w: -0.3, d: "low priority" },
+    { re: /\bcosmetic\b/i, w: -0.2, d: "cosmetic" },
+    { re: /\btypo\b/i, w: -0.2, d: "typo" },
+    { re: /\bminor\b/i, w: -0.1, d: "minor" },
+];
+
+// ── Sentiment Signal Definitions ────────────────────────────────────
+
+const FRUSTRATED_SIGS = [
+    { re: /\bfrustra(ted|ting|tion)\b/i, w: -0.8 },
+    { re: /\bwaste\s+of\s+time\b/i, w: -0.9 },
+    { re: /\bunacceptable\b/i, w: -0.7 },
+    { re: /\bterrible\b/i, w: -0.9 },
+    { re: /\bhorrible\b/i, w: -0.9 },
+    { re: /\bawful\b/i, w: -0.8 },
+    { re: /\babsurd\b/i, w: -0.7 },
+    { re: /\bridiculous\b/i, w: -0.7 },
+    { re: /!!+/, w: -0.4 },
+    { re: /\bFIX\s+THIS\b/i, w: -0.7 },
+    { re: /\bstill\s+(not\s+)?(fixed|working|resolved)\b/i, w: -0.6 },
+];
+const NEGATIVE_SIGS = [
+    { re: /\bunfortunately\b/i, w: -0.3 },
+    { re: /\bdisappoint(ed|ing)?\b/i, w: -0.4 },
+    { re: /\bannoy(ed|ing)?\b/i, w: -0.3 },
+    { re: /\bconfus(ed|ing)\b/i, w: -0.2 },
+    { re: /\bmisleading\b/i, w: -0.3 },
+    { re: /\bblock(er|ing)\b/i, w: -0.4 },
+];
+const POSITIVE_SIGS = [
+    { re: /\bthank(s| you)\b/i, w: 0.3 },
+    { re: /\bgreat\s+(work|job|library|tool)\b/i, w: 0.5 },
+    { re: /\blove\s+(this|the|it)\b/i, w: 0.5 },
+    { re: /\bawesome\b/i, w: 0.4 },
+    { re: /\bexcellent\b/i, w: 0.4 },
+    { re: /\bamazing\b/i, w: 0.4 },
+    { re: /\bhelpful\b/i, w: 0.3 },
+];
+const CONSTRUCTIVE_SIGS = [
+    { re: /\bsuggestion\b/i, w: 0.2 },
+    { re: /\bproposal\b/i, w: 0.2 },
+    { re: /\bwould\s+be\s+(nice|great|helpful)\b/i, w: 0.2 },
+    { re: /\bhere'?s?\s+(a\s+)?(workaround|fix|patch)\b/i, w: 0.3 },
+    { re: /\bpull\s+request\b/i, w: 0.3 },
+    { re: /\bPR\s*#?\d+\b/, w: 0.3 },
+    { re: /\bhappy\s+to\s+(help|contribute)\b/i, w: 0.4 },
+];
+
+// ── Classification Engine ───────────────────────────────────────────
+
+function patternScore(text, patterns) {
+    let hits = 0;
+    for (const p of patterns) {
+        if (p.test(text)) hits++;
+    }
+    return hits;
+}
+
+function detectType(text) {
+    // Regression takes priority
+    if (patternScore(text, REGRESSION_PATTERNS) > 0) return "regression";
+
+    const scores = {
+        "bug": patternScore(text, BUG_PATTERNS),
+        "feature-request": patternScore(text, FEATURE_PATTERNS),
+        "question": patternScore(text, QUESTION_PATTERNS),
+        "docs": patternScore(text, DOCS_PATTERNS),
+    };
+
+    let best = "unknown", bestScore = 0;
+    for (const [type, score] of Object.entries(scores)) {
+        if (score > bestScore) { best = type; bestScore = score; }
+    }
+    return bestScore > 0 ? best : "unknown";
+}
+
+function typeConfidence(text, type) {
+    const map = {
+        "bug": BUG_PATTERNS,
+        "feature-request": FEATURE_PATTERNS,
+        "question": QUESTION_PATTERNS,
+        "regression": REGRESSION_PATTERNS,
+        "docs": DOCS_PATTERNS,
+    };
+    const patterns = map[type] || [];
+    if (!patterns.length) return 0.1;
+    const score = patternScore(text, patterns);
+    return Math.min(score * 0.3, 1.0);
+}
+
+function scoreUrgency(text) {
+    let total = 0;
+    const signals = [];
+    for (const group of [CRITICAL_SIGNALS, HIGH_SIGNALS, MEDIUM_SIGNALS, LOW_SIGNALS]) {
+        for (const { re, w, d } of group) {
+            if (re.test(text)) {
+                total += w;
+                signals.push({ description: d, weight: w });
+            }
+        }
+    }
+    total = Math.max(0, Math.min(1, total));
+    let priority;
+    if (total >= 0.8) priority = "p0";
+    else if (total >= 0.5) priority = "p1";
+    else if (total >= 0.2) priority = "p2";
+    else priority = "p3";
+    return { score: total, priority, signals };
+}
+
+function scoreSentiment(text) {
+    let total = 0;
+    const signals = [];
+    for (const group of [FRUSTRATED_SIGS, NEGATIVE_SIGS, POSITIVE_SIGS, CONSTRUCTIVE_SIGS]) {
+        for (const { re, w } of group) {
+            if (re.test(text)) {
+                total += w;
+                signals.push({ pattern: re.source, weight: w });
+            }
+        }
+    }
+    total = Math.max(-1, Math.min(1, total));
+
+    let sentiment;
+    if (total <= -0.5) sentiment = "frustrated";
+    else if (total <= -0.1) sentiment = "negative";
+    else if (total >= 0.3) sentiment = "positive";
+    else if (total >= 0.1) sentiment = "constructive";
+    else sentiment = "neutral";
+
+    return { sentiment, score: total, signals };
+}
+
+function classify(title, body) {
+    const text = `${title}\n${body}`;
+    const type = detectType(text);
+    const confidence = typeConfidence(text, type);
+    const urgency = scoreUrgency(text);
+    const sentiment = scoreSentiment(text);
+
+    const labels = [];
+    if (type !== "unknown") labels.push({ text: type, cls: "type" });
+    if (urgency.priority !== "p3") labels.push({ text: urgency.priority, cls: "urgency" });
+    if (sentiment.sentiment !== "neutral") labels.push({ text: `sentiment:${sentiment.sentiment}`, cls: "sentiment" });
+
+    return {
+        type,
+        area: "unassigned",
+        confidence: Math.max(confidence, 0.1),
+        urgency: urgency.score,
+        priority: urgency.priority,
+        sentiment: sentiment.sentiment,
+        labels,
+        reasoning: `Type: ${type} (confidence: ${Math.round(confidence * 100)}%) | Urgency: ${urgency.priority} (${Math.round(urgency.score * 100)}%)`,
+        urgencySignals: urgency.signals,
+        sentimentSignals: sentiment.signals,
+    };
+}
+
+// ── UI Functions ────────────────────────────────────────────────────
+
+function loadSample(idx) {
+    document.getElementById("issue-title").value = SAMPLES[idx].title;
+    document.getElementById("issue-body").value = SAMPLES[idx].body;
+    classifyIssue();
+}
+
+function clearAll() {
+    document.getElementById("issue-title").value = "";
+    document.getElementById("issue-body").value = "";
+    document.getElementById("results-placeholder").classList.remove("hidden");
+    document.getElementById("results-content").classList.add("hidden");
+}
+
+function urgencyColor(score) {
+    if (score >= 0.8) return "var(--red)";
+    if (score >= 0.5) return "var(--orange)";
+    if (score >= 0.2) return "var(--yellow)";
+    return "var(--green)";
+}
+
+const SENTIMENT_EMOJI = {
+    frustrated: "😤",
+    negative: "😕",
+    neutral: "😐",
+    constructive: "🔨",
+    positive: "😊",
+};
+
+const PRIORITY_EMOJI = {
+    p0: "🔴",
+    p1: "🟠",
+    p2: "🟡",
+    p3: "🟢",
+};
+
+const TYPE_EMOJI = {
+    bug: "🐛",
+    "feature-request": "✨",
+    question: "❓",
+    regression: "🔄",
+    docs: "📄",
+    enhancement: "⚡",
+    unknown: "❔",
+};
+
+function classifyIssue() {
+    const title = document.getElementById("issue-title").value.trim();
+    const body = document.getElementById("issue-body").value.trim();
+
+    if (!title && !body) return;
+
+    const r = classify(title, body);
+
+    // Show results
+    document.getElementById("results-placeholder").classList.add("hidden");
+    document.getElementById("results-content").classList.remove("hidden");
+
+    // Type + Area
+    document.getElementById("r-type").textContent = `${TYPE_EMOJI[r.type] || ""} ${r.type}`;
+    document.getElementById("r-area").textContent = r.area;
+
+    // Sentiment
+    document.getElementById("r-sentiment").textContent = `${SENTIMENT_EMOJI[r.sentiment] || ""} ${r.sentiment}`;
+
+    // Priority
+    document.getElementById("r-priority").textContent = `${PRIORITY_EMOJI[r.priority] || ""} ${r.priority}`;
+
+    // Urgency bar
+    const urgPct = Math.round(r.urgency * 100);
+    document.getElementById("r-urgency-pct").textContent = `${urgPct}%`;
+    const urgBar = document.getElementById("r-urgency-bar");
+    urgBar.style.width = `${urgPct}%`;
+    urgBar.style.background = urgencyColor(r.urgency);
+
+    // Confidence bar
+    const confPct = Math.round(r.confidence * 100);
+    document.getElementById("r-confidence-pct").textContent = `${confPct}%`;
+    document.getElementById("r-confidence-bar").style.width = `${confPct}%`;
+
+    // Labels
+    const labelContainer = document.getElementById("r-labels");
+    labelContainer.innerHTML = "";
+    for (const l of r.labels) {
+        const span = document.createElement("span");
+        span.className = `label-tag ${l.cls}`;
+        span.textContent = l.text;
+        labelContainer.appendChild(span);
+    }
+    if (r.labels.length === 0) {
+        labelContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem">No labels triggered</span>';
+    }
+
+    // Reasoning
+    document.getElementById("r-reasoning").innerHTML = `<strong>Reasoning:</strong> ${r.reasoning}`;
+
+    // Signals
+    const signalList = document.getElementById("r-signals");
+    signalList.innerHTML = "";
+    const allSignals = [
+        ...r.urgencySignals.map(s => `⚡ ${s.description} (${s.weight > 0 ? '+' : ''}${s.weight.toFixed(1)})`),
+        ...r.sentimentSignals.map(s => `💬 ${s.pattern} (${s.weight > 0 ? '+' : ''}${s.weight.toFixed(1)})`),
+    ];
+    if (allSignals.length === 0) {
+        document.getElementById("r-signals-section").classList.add("hidden");
+    } else {
+        document.getElementById("r-signals-section").classList.remove("hidden");
+        for (const sig of allSignals) {
+            const li = document.createElement("li");
+            li.textContent = sig;
+            signalList.appendChild(li);
+        }
+    }
+}
+
+// Classify on Enter in title field
+document.getElementById("issue-title").addEventListener("keydown", e => {
+    if (e.key === "Enter") classifyIssue();
+});
+</script>
+
+</body>
+</html>

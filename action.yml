@@ -1,0 +1,68 @@
+name: 'Issue Sentinel'
+description: 'AI-powered GitHub issue triage — classify, prioritize, and route issues automatically.'
+author: 'kustonaut'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token with issues:write permission'
+    required: true
+    default: ${{ github.token }}
+  config:
+    description: 'Path to issue-sentinel.yaml config file'
+    required: false
+    default: '.github/issue-sentinel.yaml'
+  apply-labels:
+    description: 'Whether to apply suggested labels to the issue'
+    required: false
+    default: 'true'
+  post-comment:
+    description: 'Whether to post a triage comment on the issue'
+    required: false
+    default: 'false'
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.12'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Issue Sentinel
+      shell: bash
+      run: pip install issue-sentinel
+
+    - name: Run triage
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        ISSUE_NUMBER=${{ github.event.issue.number }}
+        REPO=${{ github.repository }}
+        
+        ARGS="triage-one --repo $REPO --issue $ISSUE_NUMBER"
+        
+        if [ -f "${{ inputs.config }}" ]; then
+          ARGS="$ARGS --config ${{ inputs.config }}"
+        fi
+        
+        if [ "${{ inputs.apply-labels }}" = "true" ]; then
+          ARGS="$ARGS --apply-labels"
+        fi
+        
+        if [ "${{ inputs.post-comment }}" = "true" ]; then
+          ARGS="$ARGS --comment"
+        fi
+        
+        ARGS="$ARGS --json-output"
+        
+        echo "::group::Issue Sentinel Triage"
+        issue-sentinel $ARGS
+        echo "::endgroup::"
