@@ -6,14 +6,13 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
-from issue_sentinel.classifier import IssueClassifier, ClassificationResult
+from issue_sentinel.classifier import ClassificationResult, IssueClassifier
 from issue_sentinel.config import SentinelConfig
+from issue_sentinel.github_client import GitHubClient, GitHubIssue
 from issue_sentinel.llm_classifier import LLMClassifier
 from issue_sentinel.sentiment import SentimentAnalyzer
 from issue_sentinel.urgency import UrgencyScorer
-from issue_sentinel.github_client import GitHubClient, GitHubIssue
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class IssueSentinel:
         self.rule_classifier = IssueClassifier(config)
         self.sentiment_analyzer = SentimentAnalyzer()
         self.urgency_scorer = UrgencyScorer(config.urgency)
-        self.llm_classifier: Optional[LLMClassifier] = None
+        self.llm_classifier: LLMClassifier | None = None
 
         # Initialize LLM classifier if configured
         if config.classification.provider not in ("rule-based", ""):
@@ -47,7 +46,7 @@ class IssueSentinel:
         self,
         title: str,
         body: str = "",
-        existing_labels: Optional[list[str]] = None,
+        existing_labels: list[str] | None = None,
     ) -> ClassificationResult:
         """Classify a single issue through the full triage pipeline.
 
@@ -132,7 +131,7 @@ class IssueSentinel:
 
         # Apply labels
         if apply_labels and result.suggested_labels:
-            new_labels = [l for l in result.suggested_labels if l not in issue.labels]
+            new_labels = [lbl for lbl in result.suggested_labels if lbl not in issue.labels]
             if new_labels:
                 try:
                     github_client.add_labels(issue.number, new_labels)
@@ -193,8 +192,8 @@ class IssueSentinel:
         lines = [
             "### 🛡️ Issue Sentinel — Auto Triage",
             "",
-            f"| Field | Value |",
-            f"|-------|-------|",
+            "| Field | Value |",
+            "|-------|-------|",
             f"| **Type** | `{result.category}` |",
             f"| **Area** | `{result.area}` |",
             f"| **Urgency** | {urgency_emoji} {result.urgency:.0%} |",

@@ -135,7 +135,10 @@ class SentimentAnalyzer:
             return Sentiment.NEGATIVE
         elif score >= 0.3:
             # Check if it's constructive (has PR, workaround, suggestion signals)
-            constructive_markers = ["suggestion", "proposal", "workaround", "fix", "patch", "PR", "pull"]
+            constructive_markers = [
+                "suggestion", "proposal", "workaround",
+                "fix", "patch", "PR", "pull",
+            ]
             if any(m.lower() in " ".join(signals).lower() for m in constructive_markers):
                 return Sentiment.CONSTRUCTIVE
             return Sentiment.POSITIVE

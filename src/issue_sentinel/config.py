@@ -80,7 +80,7 @@ class SentinelConfig:
     @classmethod
     def from_yaml(cls, path: str | Path) -> SentinelConfig:
         """Load configuration from a YAML file."""
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
         return cls.from_dict(data)
 

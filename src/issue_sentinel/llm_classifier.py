@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from issue_sentinel.classifier import ClassificationResult
 from issue_sentinel.config import ClassificationConfig
@@ -44,7 +44,7 @@ class LLMClassifier:
         self,
         title: str,
         body: str = "",
-    ) -> Optional[ClassificationResult]:
+    ) -> ClassificationResult | None:
         """Classify an issue using an LLM.
 
         Returns None if LLM call fails (caller should fallback to rule-based).
@@ -70,7 +70,7 @@ class LLMClassifier:
             body=body[:2000],  # Truncate long bodies
         )
 
-    def _parse_response(self, text: str) -> Optional[ClassificationResult]:
+    def _parse_response(self, text: str) -> ClassificationResult | None:
         """Parse LLM JSON response into ClassificationResult."""
         try:
             # Extract JSON from response (handle markdown code blocks)
@@ -94,7 +94,7 @@ class LLMClassifier:
             logger.warning(f"Failed to parse LLM response: {e}")
             return None
 
-    def _classify_openai(self, title: str, body: str) -> Optional[ClassificationResult]:
+    def _classify_openai(self, title: str, body: str) -> ClassificationResult | None:
         """Classify using OpenAI API."""
         try:
             import openai
@@ -116,7 +116,7 @@ class LLMClassifier:
         text = response.choices[0].message.content or ""
         return self._parse_response(text)
 
-    def _classify_anthropic(self, title: str, body: str) -> Optional[ClassificationResult]:
+    def _classify_anthropic(self, title: str, body: str) -> ClassificationResult | None:
         """Classify using Anthropic API."""
         try:
             import anthropic

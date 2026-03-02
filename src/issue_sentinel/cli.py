@@ -11,8 +11,8 @@ import click
 
 from issue_sentinel.classifier import ClassificationResult
 from issue_sentinel.config import SentinelConfig
-from issue_sentinel.sentinel import IssueSentinel
 from issue_sentinel.github_client import GitHubClient
+from issue_sentinel.sentinel import IssueSentinel
 
 
 @click.group()

@@ -5,9 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
-from issue_sentinel.config import SentinelConfig, AreaConfig
+from issue_sentinel.config import SentinelConfig
 
 
 class IssueType(str, Enum):
@@ -113,7 +112,7 @@ class IssueClassifier:
         self,
         title: str,
         body: str = "",
-        existing_labels: Optional[list[str]] = None,
+        existing_labels: list[str] | None = None,
     ) -> ClassificationResult:
         """Classify an issue by type and product area.
 

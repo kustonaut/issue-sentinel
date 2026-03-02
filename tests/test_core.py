@@ -1,19 +1,19 @@
 """Tests for Issue Sentinel core components."""
 
 import json
-import pytest
-from issue_sentinel.classifier import IssueClassifier, ClassificationResult, IssueType
-from issue_sentinel.sentiment import SentimentAnalyzer, Sentiment, SentimentResult
-from issue_sentinel.urgency import UrgencyScorer, UrgencyResult
-from issue_sentinel.config import (
-    SentinelConfig,
-    AreaConfig,
-    UrgencyConfig,
-    ClassificationConfig,
-    LabelConfig,
-)
-from issue_sentinel.sentinel import IssueSentinel
 
+import pytest
+
+from issue_sentinel.classifier import ClassificationResult, IssueClassifier
+from issue_sentinel.config import (
+    AreaConfig,
+    LabelConfig,
+    SentinelConfig,
+    UrgencyConfig,
+)
+from issue_sentinel.sentiment import Sentiment, SentimentAnalyzer
+from issue_sentinel.sentinel import IssueSentinel
+from issue_sentinel.urgency import UrgencyScorer
 
 # ── Fixtures ────────────────────────────────────────────────────────────
 
@@ -159,7 +159,7 @@ class TestIssueClassifier:
         assert result.category in ("enhancement", "feature-request")
 
     def test_docs_detection(self, classifier: IssueClassifier):
-        """Documentation-related issues match question patterns (docs keyword is in question set)."""
+        """Documentation-related issues match question patterns."""
         result = classifier.classify(
             title="Documentation is outdated for the auth endpoint",
             body="The docs say to use method X but it was removed.",
@@ -426,7 +426,7 @@ class TestIssueSentinel:
             title="Security vulnerability in authentication API",
             body="Remote code execution via CVE-2026-99999. Production down.",
         )
-        assert any(l in result.suggested_labels for l in ("p0", "p1"))
+        assert any(lbl in result.suggested_labels for lbl in ("p0", "p1"))
 
     def test_sentiment_label_when_enabled(self):
         """When include_sentiment=True, sentiment labels are added."""
@@ -439,7 +439,7 @@ class TestIssueSentinel:
             title="This is TERRIBLE! Core bug!",
             body="Frustrated! Waste of time!",
         )
-        assert any("sentiment:" in l for l in result.suggested_labels)
+        assert any("sentiment:" in lbl for lbl in result.suggested_labels)
 
     def test_classify_returns_all_fields(self, sentinel: IssueSentinel):
         """Every field on ClassificationResult is populated after classify()."""

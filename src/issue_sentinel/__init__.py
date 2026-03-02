@@ -3,7 +3,7 @@
 
 __version__ = "0.1.0"
 
-from issue_sentinel.classifier import IssueClassifier, ClassificationResult
+from issue_sentinel.classifier import ClassificationResult, IssueClassifier
 from issue_sentinel.config import SentinelConfig
 from issue_sentinel.sentinel import IssueSentinel
 
