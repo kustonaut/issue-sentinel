@@ -365,11 +365,11 @@ MIT — see [LICENSE](LICENSE)
 [**🎮 Try the Interactive Demo →**](https://kustonaut.github.io/issue-sentinel)
 
 ```
-    ╱╲
-   ╱  ╲      issue-sentinel
-  ╱ 🛡️ ╲     "sleep well, your issues are triaged"
- ╱──────╲
-╱________╲
+      /\
+     /  \       issue-sentinel
+    / 🛡️ \      "sleep well, your issues are triaged"
+   /------\
+  /________\
 ```
 
 </div>
