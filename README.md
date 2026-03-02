@@ -485,12 +485,6 @@ The MCP server, HTML report generator, and multi-repo support were inspired by a
 
 [**🎮 Try the Interactive Demo →**](https://kustonaut.github.io/issue-sentinel)
 
-```
-        /\
-       /  \        issue-sentinel
-      / ** \       "sleep well, your issues are triaged"
-     /------\
-    /________\
-```
+*"Sleep well, your issues are triaged."*
 
 </div>
