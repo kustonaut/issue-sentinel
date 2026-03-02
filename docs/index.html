@@ -3,82 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Issue Sentinel — Live Demo</title>
-    <meta name="description" content="AI-powered GitHub issue triage. Try the interactive demo — classify issues by type, urgency, and sentiment in real time.">
+    <title>Issue Sentinel — AI-Powered GitHub Issue Triage</title>
+    <meta name="description" content="AI-powered GitHub issue triage. Classify issues by type, urgency, and sentiment using 35+ regex patterns. Try the live demo.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0d1117;
-            --surface: #161b22;
-            --surface-hover: #1c2333;
-            --border: #30363d;
+            --bg: #0a0e14;
+            --bg-alt: #0d1117;
+            --surface: #131922;
+            --surface-hover: #1a2233;
+            --border: #1e2d3d;
+            --border-bright: #2d4a5e;
             --text: #e6edf3;
-            --text-muted: #8b949e;
+            --text-muted: #6e7e8e;
             --accent: #58a6ff;
             --accent-hover: #79c0ff;
+            --accent-glow: rgba(88, 166, 255, 0.15);
             --green: #3fb950;
+            --green-glow: rgba(63, 185, 80, 0.15);
             --yellow: #d29922;
             --orange: #db6d28;
             --red: #f85149;
+            --red-glow: rgba(248, 81, 73, 0.1);
             --purple: #bc8cff;
+            --cyan: #39d2c0;
+            --cyan-glow: rgba(57, 210, 192, 0.12);
             --radius: 8px;
-            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --radius-lg: 12px;
+            --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-family: var(--sans);
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ── Header ─────────────────────────────── */
+        /* ── Animated Grid Background ───────────── */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(88,166,255,0.08) 0%, transparent 70%);
+        }
+
+        /* ── Hero ───────────────────────────────── */
         .hero {
+            position: relative;
             text-align: center;
-            padding: 3rem 1rem 2rem;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #161b22 0%, var(--bg) 100%);
+            padding: 5rem 1rem 3rem;
+            z-index: 1;
+            overflow: hidden;
         }
-        .hero h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(88,166,255,0.04) 60deg, transparent 120deg);
+            animation: hero-rotate 20s linear infinite;
+        }
+        @keyframes hero-rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content { position: relative; z-index: 2; }
+
+        .logo {
+            font-size: 4rem;
             margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 30px rgba(88,166,255,0.4));
+            animation: pulse-glow 3s ease-in-out infinite alternate;
         }
-        .hero h1 span { color: var(--accent); }
-        .hero p {
+        @keyframes pulse-glow {
+            from { filter: drop-shadow(0 0 20px rgba(88,166,255,0.3)); }
+            to { filter: drop-shadow(0 0 40px rgba(88,166,255,0.6)); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.3rem;
+            background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 50%, #bc8cff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero .tagline {
+            font-family: var(--mono);
+            color: var(--cyan);
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+        }
+        .hero .tagline .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: var(--cyan);
+            vertical-align: text-bottom;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .hero .subtitle {
             color: var(--text-muted);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
+            font-size: 1.15rem;
+            max-width: 650px;
+            margin: 0 auto 2rem;
         }
+
+        /* Badge row */
         .badge-row {
             display: flex;
             gap: 0.5rem;
             justify-content: center;
-            margin-top: 1rem;
             flex-wrap: wrap;
         }
         .badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.7rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
+            font-family: var(--mono);
             border: 1px solid var(--border);
             color: var(--text-muted);
+            background: var(--surface);
+            transition: border-color 0.3s, color 0.3s;
         }
+        .badge:hover { border-color: var(--accent); color: var(--accent); }
+        .badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+        }
+
+        /* ── Stats ──────────────────────────────── */
+        .stats-bar {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: -1rem auto 0;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .stat {
+            background: var(--surface);
+            padding: 1.2rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-family: var(--mono);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-value.green { color: var(--green); }
+        .stat-value.purple { color: var(--purple); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+        @media (max-width: 600px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ── Section Titles ─────────────────────── */
+        .section-title {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 3rem auto 1.5rem;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .section-title h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .section-title h2 .accent { color: var(--accent); }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-bright), transparent);
+        }
+        .section-tag {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* ── Architecture Diagram ───────────────── */
+        .arch-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+        }
+        .arch-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            overflow-x: auto;
+        }
+        .arch-svg { width: 100%; height: auto; }
+
+        /* ── Terminal Window ─────────────────────── */
+        .terminal {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            padding: 0 1rem;
+        }
+        .term-window {
+            background: #0c0c0c;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .term-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: #1a1a2e;
+            border-bottom: 1px solid var(--border);
+        }
+        .term-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+        .term-dot.red { background: #ff5f56; }
+        .term-dot.yellow { background: #ffbd2e; }
+        .term-dot.green { background: #27c93f; }
+        .term-tab {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+            padding: 0.2rem 0.8rem;
+            background: #0c0c0c;
+            border-radius: 4px 4px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+        .term-body {
+            padding: 1.2rem;
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            line-height: 1.8;
+            color: #a9b7c6;
+            overflow-x: auto;
+        }
+        .term-body .prompt { color: var(--green); }
+        .term-body .cmd { color: #e6edf3; }
+        .term-body .flag { color: var(--purple); }
+        .term-body .str { color: var(--yellow); }
+        .term-body .comment { color: #546e7a; }
+        .term-body .output { color: var(--text-muted); }
+        .term-body .highlight { color: var(--cyan); }
+        .term-body .warn { color: var(--orange); }
 
         /* ── Main Layout ────────────────────────── */
         .container {
-            max-width: 1100px;
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: 0 1rem 2rem;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 1.5rem;
         }
         @media (max-width: 768px) {
             .container { grid-template-columns: 1fr; }
@@ -88,26 +330,32 @@
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
+            border-radius: var(--radius-lg);
             padding: 1.5rem;
+            transition: border-color 0.3s;
         }
+        .card:hover { border-color: var(--border-bright); }
         .card h2 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-family: var(--mono);
+            color: var(--text-muted);
         }
+        .card h2 .icon { color: var(--accent); }
 
         /* ── Form ──────────────────────────────── */
         label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 600;
+            font-family: var(--mono);
             color: var(--text-muted);
             margin-bottom: 0.3rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
         input[type="text"], textarea, select {
             width: 100%;
@@ -116,163 +364,158 @@
             border-radius: var(--radius);
             padding: 0.6rem 0.8rem;
             color: var(--text);
-            font-size: 0.95rem;
-            font-family: inherit;
+            font-size: 0.9rem;
+            font-family: var(--mono);
             margin-bottom: 1rem;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
-        textarea { resize: vertical; min-height: 120px; }
+        textarea { resize: vertical; min-height: 100px; }
 
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.7rem 1.5rem;
-            background: var(--accent);
+            padding: 0.65rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent), #4d8fcc);
             color: #fff;
             border: none;
             border-radius: var(--radius);
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: var(--mono);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             width: 100%;
             justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .btn:hover { background: var(--accent-hover); }
+        .btn:hover {
+            background: linear-gradient(135deg, var(--accent-hover), #5fa3e0);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-1px);
+        }
         .btn-secondary {
             background: var(--surface-hover);
             border: 1px solid var(--border);
-            color: var(--text);
+            color: var(--text-muted);
         }
-        .btn-secondary:hover { background: var(--border); }
+        .btn-secondary:hover {
+            background: var(--border);
+            box-shadow: none;
+            transform: none;
+        }
         .btn-row {
             display: flex;
             gap: 0.5rem;
             margin-top: 0.5rem;
         }
 
-        /* ── Results ────────────────────────────── */
+        /* ── Result Cells ───────────────────────── */
         .result-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
         }
         .result-cell {
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 0.8rem;
+            padding: 0.7rem;
+            transition: border-color 0.3s;
         }
+        .result-cell:hover { border-color: var(--border-bright); }
         .result-cell .label {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
+            font-family: var(--mono);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             color: var(--text-muted);
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.2rem;
         }
         .result-cell .value {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
+            font-family: var(--mono);
         }
 
-        /* Urgency bar */
-        .urgency-bar {
-            height: 8px;
+        /* Bars */
+        .urgency-bar, .confidence-bar {
+            height: 6px;
             background: var(--border);
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
-            margin-top: 0.4rem;
+            margin-top: 0.3rem;
         }
-        .urgency-fill {
+        .urgency-fill, .confidence-fill {
             height: 100%;
-            border-radius: 4px;
-            transition: width 0.4s ease;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
+        .confidence-fill { background: var(--green); }
 
         /* Labels */
         .label-list {
             display: flex;
             flex-wrap: wrap;
             gap: 0.4rem;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
         .label-tag {
             padding: 0.15rem 0.5rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
             font-weight: 600;
-            background: var(--surface-hover);
+            font-family: var(--mono);
+            background: var(--bg);
             border: 1px solid var(--border);
             color: var(--text);
         }
-        .label-tag.type { border-color: var(--accent); color: var(--accent); }
+        .label-tag.type { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
         .label-tag.area { border-color: var(--purple); color: var(--purple); }
-        .label-tag.urgency { border-color: var(--red); color: var(--red); }
+        .label-tag.urgency { border-color: var(--red); color: var(--red); background: var(--red-glow); }
         .label-tag.sentiment { border-color: var(--yellow); color: var(--yellow); }
-
-        /* Confidence meter */
-        .confidence-meter {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .confidence-bar {
-            flex: 1;
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .confidence-fill {
-            height: 100%;
-            background: var(--green);
-            border-radius: 3px;
-            transition: width 0.4s ease;
-        }
 
         /* Reasoning */
         .reasoning {
             background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 0.8rem;
-            font-size: 0.85rem;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 0.7rem 0.8rem;
+            font-size: 0.8rem;
+            font-family: var(--mono);
             color: var(--text-muted);
-            margin-top: 0.75rem;
+            margin-top: 0.6rem;
         }
-        .reasoning strong { color: var(--text); }
+        .reasoning strong { color: var(--cyan); }
 
-        /* Signals list */
-        .signals {
-            margin-top: 0.75rem;
-        }
+        /* Signals */
+        .signals { margin-top: 0.6rem; }
         .signals summary {
             cursor: pointer;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        .signals ul {
-            list-style: none;
-            margin-top: 0.5rem;
-        }
-        .signals li {
             font-size: 0.8rem;
-            padding: 0.2rem 0;
+            font-family: var(--mono);
             color: var(--text-muted);
-            font-family: 'Fira Code', 'Cascadia Code', monospace;
+        }
+        .signals ul { list-style: none; margin-top: 0.4rem; }
+        .signals li {
+            font-size: 0.75rem;
+            padding: 0.15rem 0;
+            color: var(--text-muted);
+            font-family: var(--mono);
         }
 
-        /* Hidden state */
         .hidden { display: none !important; }
 
         /* ── Samples ────────────────────────────── */
-        .samples { margin-top: 1.5rem; }
+        .samples { margin-top: 1.2rem; }
         .sample-btn {
             display: block;
             width: 100%;
@@ -280,144 +523,296 @@
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 0.6rem 0.8rem;
+            padding: 0.5rem 0.7rem;
             color: var(--text);
             cursor: pointer;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            transition: border-color 0.2s;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+            font-family: var(--mono);
+            transition: border-color 0.2s, background 0.2s;
         }
-        .sample-btn:hover { border-color: var(--accent); }
+        .sample-btn:hover { border-color: var(--accent); background: var(--accent-glow); }
         .sample-btn .sample-type {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── Feature Grid ───────────────────────── */
+        .features {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .features { grid-template-columns: 1fr; }
+        }
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .feature-card:hover {
+            border-color: var(--border-bright);
+            transform: translateY(-2px);
+        }
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        .feature-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .feature-card code {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--cyan);
+            background: var(--bg);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
         }
 
         /* ── Footer ─────────────────────────────── */
         .footer {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 3rem 1rem;
             border-top: 1px solid var(--border);
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-family: var(--mono);
         }
         .footer a { color: var(--accent); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
-
-        /* ── How it works ───────────────────────── */
-        .how-it-works {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 1rem 2rem;
-        }
-        .pipeline {
-            display: flex;
-            gap: 0;
-            overflow-x: auto;
-            padding: 1rem 0;
-        }
-        .pipeline-step {
-            flex: 1;
-            min-width: 140px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 1rem;
-            text-align: center;
-            position: relative;
-        }
-        .pipeline-step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-        .pipeline-step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
-        .pipeline-step .step-num {
-            font-size: 0.7rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 0.3rem;
-        }
-        .pipeline-step .step-name {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        .pipeline-step .step-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.3rem;
-        }
-        .pipeline-arrow {
-            display: flex;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            padding: 0 0.3rem;
+        .footer .ascii-art {
+            font-size: 0.55rem;
+            line-height: 1.3;
+            color: var(--border-bright);
+            margin-bottom: 1.5rem;
+            white-space: pre;
         }
     </style>
 </head>
 <body>
 
-<!-- ── Hero ──────────────────────────────────────── -->
+<div class="grid-bg"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- HERO                                                              -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
 <header class="hero">
-    <h1>🛡️ Issue <span>Sentinel</span></h1>
-    <p>AI-powered GitHub issue triage. Paste any public GitHub issue URL or enter text manually — classify it live.</p>
-    <div class="badge-row">
-        <span class="badge">Python 3.10+</span>
-        <span class="badge">Rule-Based + LLM</span>
-        <span class="badge">Zero Config</span>
-        <span class="badge">MIT License</span>
+    <div class="hero-content">
+        <div class="logo">🛡️</div>
+        <h1>Issue Sentinel</h1>
+        <div class="tagline">
+            <span id="typed-text"></span><span class="cursor"></span>
+        </div>
+        <p class="subtitle">
+            Drop any GitHub issue URL. Get instant classification — type, urgency, sentiment —
+            powered by 35+ regex patterns. Zero API keys. Runs in your browser.
+        </p>
+        <div class="badge-row">
+            <span class="badge"><span class="dot"></span> Python 3.10+</span>
+            <span class="badge">▸ pip install issue-sentinel</span>
+            <span class="badge">⚡ Rule-Based + LLM</span>
+            <span class="badge">⊘ Zero Config</span>
+            <span class="badge">📄 MIT License</span>
+        </div>
     </div>
 </header>
 
-<!-- ── Pipeline Visualization ───────────────────── -->
-<section class="how-it-works">
-    <div class="pipeline">
-        <div class="pipeline-step">
-            <div class="step-num">Step 1</div>
-            <div class="step-name">📥 Input</div>
-            <div class="step-desc">Issue title + body</div>
+<!-- ── Stats Bar ────────────────────────────────── -->
+<div class="stats-bar">
+    <div class="stat">
+        <div class="stat-value" id="stat-patterns">0</div>
+        <div class="stat-label">Regex Patterns</div>
+    </div>
+    <div class="stat">
+        <div class="stat-value green" id="stat-urgency">0</div>
+        <div class="stat-label">Urgency Signals</div>
+    </div>
+    <div class="stat">
+        <div class="stat-value purple" id="stat-sentiment">0</div>
+        <div class="stat-label">Sentiment Markers</div>
+    </div>
+    <div class="stat">
+        <div class="stat-value cyan" id="stat-actions">0</div>
+        <div class="stat-label">Auto-Actions</div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ARCHITECTURE                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>⚙️ <span class="accent">Architecture</span></h2>
+    <span class="section-tag">// how it works</span>
+</div>
+
+<div class="arch-section">
+    <div class="arch-diagram">
+        <svg class="arch-svg" viewBox="0 0 1000 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- Animated flow lines -->
+            <defs>
+                <linearGradient id="flow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0"/>
+                    <stop offset="50%" style="stop-color:#58a6ff;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:0"/>
+                    <animate attributeName="x1" values="-100%;100%" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="x2" values="0%;200%" dur="3s" repeatCount="indefinite"/>
+                </linearGradient>
+                <linearGradient id="flow2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#bc8cff;stop-opacity:0"/>
+                    <stop offset="50%" style="stop-color:#bc8cff;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#bc8cff;stop-opacity:0"/>
+                    <animate attributeName="x1" values="-100%;100%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+                    <animate attributeName="x2" values="0%;200%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+                </linearGradient>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+            </defs>
+
+            <!-- Connection lines -->
+            <line x1="185" y1="100" x2="240" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="390" y1="75" x2="450" y2="75" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="390" y1="100" x2="450" y2="125" stroke="url(#flow2)" stroke-width="2"/>
+            <line x1="390" y1="125" x2="450" y2="175" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="605" y1="75" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="605" y1="125" x2="660" y2="100" stroke="url(#flow2)" stroke-width="2"/>
+            <line x1="605" y1="175" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="820" y1="100" x2="870" y2="100" stroke="url(#flow)" stroke-width="2"/>
+
+            <!-- Node: Input -->
+            <rect x="20" y="60" width="165" height="80" rx="8" fill="#131922" stroke="#1e2d3d" stroke-width="1.5"/>
+            <text x="103" y="88" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📥 INPUT</text>
+            <text x="103" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">GitHub Issue</text>
+            <text x="103" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">title + body + URL</text>
+
+            <!-- Node: Parser -->
+            <rect x="240" y="60" width="150" height="80" rx="8" fill="#131922" stroke="#2d4a5e" stroke-width="1.5"/>
+            <text x="315" y="88" text-anchor="middle" fill="#39d2c0" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🔬 PARSER</text>
+            <text x="315" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Tokenize &amp; normalize</text>
+            <text x="315" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">extract signals</text>
+
+            <!-- Node: Type Classifier -->
+            <rect x="450" y="40" width="155" height="55" rx="8" fill="#131922" stroke="#58a6ff" stroke-width="1.5"/>
+            <text x="528" y="62" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🏷️ TYPE</text>
+            <text x="528" y="80" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">bug · feature · question</text>
+
+            <!-- Node: Urgency Scorer -->
+            <rect x="450" y="105" width="155" height="55" rx="8" fill="#131922" stroke="#f85149" stroke-width="1.5"/>
+            <text x="528" y="127" text-anchor="middle" fill="#f85149" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🎯 URGENCY</text>
+            <text x="528" y="145" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">p0 · p1 · p2 · p3</text>
+
+            <!-- Node: Sentiment Analyzer -->
+            <rect x="450" y="170" width="155" height="55" rx="8" fill="#131922" stroke="#d29922" stroke-width="1.5"/>
+            <text x="528" y="192" text-anchor="middle" fill="#d29922" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">💬 SENTIMENT</text>
+            <text x="528" y="210" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">frustrated → positive</text>
+
+            <!-- Node: Merge -->
+            <rect x="660" y="60" width="160" height="80" rx="8" fill="#131922" stroke="#bc8cff" stroke-width="1.5"/>
+            <text x="740" y="88" text-anchor="middle" fill="#bc8cff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🧬 MERGE</text>
+            <text x="740" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Weighted fusion</text>
+            <text x="740" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">confidence scoring</text>
+
+            <!-- Node: Output -->
+            <rect x="870" y="55" width="115" height="90" rx="8" fill="#131922" stroke="#3fb950" stroke-width="2" filter="url(#glow)"/>
+            <text x="928" y="82" text-anchor="middle" fill="#3fb950" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📊 OUTPUT</text>
+            <text x="928" y="100" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">labels[]</text>
+            <text x="928" y="114" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">priority</text>
+            <text x="928" y="128" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">routing</text>
+
+            <!-- Optional LLM branch -->
+            <rect x="240" y="190" width="150" height="55" rx="8" fill="#131922" stroke="#30363d" stroke-dasharray="5,5" stroke-width="1"/>
+            <text x="315" y="212" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600">🤖 LLM</text>
+            <text x="315" y="230" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">optional · GPT / Claude</text>
+            <line x1="315" y1="190" x2="315" y2="140" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="340" y="172" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="7">fallback</text>
+
+            <!-- Legend -->
+            <text x="20" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">─── deterministic flow</text>
+            <text x="200" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">┈┈┈ optional LLM path</text>
+            <text x="400" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">⬡ parallel analyzers run concurrently</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- QUICK START                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>🚀 <span class="accent">Quick Start</span></h2>
+    <span class="section-tag">// 3 ways to run</span>
+</div>
+
+<div class="terminal">
+    <div class="term-window">
+        <div class="term-bar">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+            <span class="term-tab">terminal</span>
         </div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step">
-            <div class="step-num">Step 2</div>
-            <div class="step-name">🏷️ Classify</div>
-            <div class="step-desc">35+ regex patterns</div>
-        </div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step">
-            <div class="step-num">Step 3</div>
-            <div class="step-name">🎯 Urgency</div>
-            <div class="step-desc">Security, regression, P0</div>
-        </div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step">
-            <div class="step-num">Step 4</div>
-            <div class="step-name">💬 Sentiment</div>
-            <div class="step-desc">Frustrated → Positive</div>
-        </div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-step">
-            <div class="step-num">Step 5</div>
-            <div class="step-name">📊 Action</div>
-            <div class="step-desc">Labels + routing</div>
+        <div class="term-body">
+<span class="comment"># ── Install ──────────────────────────────────────────────</span>
+<span class="prompt">$</span> <span class="cmd">pip install</span> <span class="str">issue-sentinel</span>
+
+<span class="comment"># ── CLI: classify a single issue ─────────────────────────</span>
+<span class="prompt">$</span> <span class="cmd">issue-sentinel classify</span> <span class="flag">--title</span> <span class="str">"Login API returns 500"</span> \
+    <span class="flag">--body</span> <span class="str">"Crashes after upgrade to v3, was working in v2.9"</span>
+
+<span class="output">  type:       </span><span class="highlight">regression</span>    <span class="output">confidence: </span><span class="warn">0.60</span>
+<span class="output">  urgency:    </span><span class="warn">p1</span>            <span class="output">score:      </span><span class="warn">0.60</span>
+<span class="output">  sentiment:  </span><span class="str">negative</span>      <span class="output">labels:     </span><span class="highlight">[regression, p1]</span>
+
+<span class="comment"># ── GitHub Action: auto-triage on every new issue ────────</span>
+<span class="comment"># .github/workflows/triage.yml</span>
+<span class="prompt">uses:</span> <span class="str">kustonaut/issue-sentinel@v1</span>
+<span class="prompt">with:</span>
+  <span class="flag">github-token:</span> <span class="str">${{ secrets.GITHUB_TOKEN }}</span>
         </div>
     </div>
-</section>
+</div>
 
-<!-- ── Main Content ─────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- LIVE DEMO                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>⚡ <span class="accent">Live Demo</span></h2>
+    <span class="section-tag">// runs locally in your browser</span>
+</div>
+
 <main class="container">
-
     <!-- Left: Input -->
     <div class="card">
-        <h2>📝 Paste an Issue</h2>
+        <h2><span class="icon">›</span> input.classify()</h2>
 
         <!-- GitHub URL Import -->
-        <label for="github-url">Import from GitHub</label>
+        <label for="github-url">// import from github</label>
         <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
             <input type="text" id="github-url" placeholder="https://github.com/owner/repo/issues/123" style="margin-bottom:0; flex:1;">
-            <button class="btn" onclick="fetchGitHubIssue()" style="width:auto; white-space:nowrap;" id="fetch-btn">📥 Fetch</button>
+            <button class="btn" onclick="fetchGitHubIssue()" style="width:auto; white-space:nowrap; padding:0.5rem 1rem;" id="fetch-btn">📥 FETCH</button>
         </div>
-        <div id="fetch-error" style="color:var(--red); font-size:0.8rem; margin:-0.5rem 0 0.75rem; display:none;"></div>
-        <div id="fetch-meta" class="hidden" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.8rem; color:var(--text-muted);">
+        <div id="fetch-error" style="color:var(--red); font-size:0.75rem; font-family:var(--mono); margin:-0.5rem 0 0.75rem; display:none;"></div>
+        <div id="fetch-meta" class="hidden" style="background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0; padding:0.5rem 0.7rem; margin-bottom:1rem; font-size:0.75rem; font-family:var(--mono); color:var(--text-muted);">
             <span id="fetch-repo" style="color:var(--accent);"></span>
             <span id="fetch-labels" style="margin-left:0.5rem;"></span>
             <span id="fetch-state" style="float:right;"></span>
@@ -425,78 +820,84 @@
 
         <div style="position:relative; text-align:center; margin-bottom:1rem;">
             <hr style="border:none; border-top:1px solid var(--border);">
-            <span style="position:absolute; top:-0.6rem; left:50%; transform:translateX(-50%); background:var(--surface); padding:0 0.5rem; color:var(--text-muted); font-size:0.75rem;">or enter manually</span>
+            <span style="position:absolute; top:-0.55rem; left:50%; transform:translateX(-50%); background:var(--surface); padding:0 0.5rem; color:var(--text-muted); font-size:0.65rem; font-family:var(--mono);">// or enter manually</span>
         </div>
 
-        <label for="issue-title">Title</label>
+        <label for="issue-title">title</label>
         <input type="text" id="issue-title" placeholder="e.g., API returns 500 on login endpoint">
 
-        <label for="issue-body">Body</label>
+        <label for="issue-body">body</label>
         <textarea id="issue-body" placeholder="Describe the issue..."></textarea>
 
         <div class="btn-row">
-            <button class="btn" onclick="classifyIssue()">🔍 Classify</button>
-            <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+            <button class="btn" onclick="classifyIssue()">▸ CLASSIFY</button>
+            <button class="btn btn-secondary" onclick="clearAll()">↻ CLEAR</button>
         </div>
 
         <div class="samples">
-            <label>Try a sample</label>
+            <label>// sample issues</label>
             <button class="sample-btn" onclick="loadSample(0)">
                 <div class="sample-type">🐛 Bug Report</div>
                 API returns 500 on login endpoint
             </button>
             <button class="sample-btn" onclick="loadSample(1)">
-                <div class="sample-type">🔴 Security Vulnerability</div>
+                <div class="sample-type">🔴 Security — CVE</div>
                 Remote code execution via auth bypass
             </button>
             <button class="sample-btn" onclick="loadSample(2)">
                 <div class="sample-type">😤 Frustrated User</div>
-                STILL broken after 6 months! Unacceptable!
+                STILL broken after 6 months!
             </button>
             <button class="sample-btn" onclick="loadSample(3)">
                 <div class="sample-type">✨ Feature Request</div>
-                Add dark mode support for the dashboard
+                Add dark mode support
             </button>
             <button class="sample-btn" onclick="loadSample(4)">
                 <div class="sample-type">🔄 Regression</div>
-                Chart rendering broke after upgrading to v3
+                Charts broke after v3 upgrade
             </button>
         </div>
     </div>
 
     <!-- Right: Results -->
     <div class="card">
-        <h2>📊 Classification Result</h2>
+        <h2><span class="icon">›</span> result.toJSON()</h2>
 
-        <div id="results-placeholder" style="text-align:center; padding: 3rem 1rem; color: var(--text-muted);">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
-            <p>Enter an issue title and body, then click <strong>Classify</strong> to see results.</p>
+        <div id="results-placeholder" style="text-align:center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 3rem; margin-bottom: 0.8rem; filter: opacity(0.3);">🛡️</div>
+            <p style="font-family:var(--mono); font-size:0.85rem;">
+                <span style="color:var(--text-muted);">awaiting</span>
+                <span style="color:var(--accent);">input</span><span style="color:var(--text-muted);">...</span>
+            </p>
+            <p style="font-size:0.75rem; margin-top:0.5rem; color:var(--border-bright);">
+                paste a URL or click a sample to begin
+            </p>
         </div>
 
         <div id="results-content" class="hidden">
             <div class="result-grid">
                 <div class="result-cell">
-                    <div class="label">Type</div>
+                    <div class="label">type</div>
                     <div class="value" id="r-type">—</div>
                 </div>
                 <div class="result-cell">
-                    <div class="label">Area</div>
+                    <div class="label">area</div>
                     <div class="value" id="r-area">—</div>
                 </div>
                 <div class="result-cell">
-                    <div class="label">Sentiment</div>
+                    <div class="label">sentiment</div>
                     <div class="value" id="r-sentiment">—</div>
                 </div>
                 <div class="result-cell">
-                    <div class="label">Priority</div>
+                    <div class="label">priority</div>
                     <div class="value" id="r-priority">—</div>
                 </div>
             </div>
 
             <!-- Urgency bar -->
-            <div style="margin-bottom: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>Urgency</span>
+            <div style="margin-bottom: 0.6rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-family:var(--mono); color: var(--text-muted);">
+                    <span>urgency</span>
                     <span id="r-urgency-pct">0%</span>
                 </div>
                 <div class="urgency-bar">
@@ -505,9 +906,9 @@
             </div>
 
             <!-- Confidence -->
-            <div style="margin-bottom: 0.75rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>Confidence</span>
+            <div style="margin-bottom: 0.6rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-family:var(--mono); color: var(--text-muted);">
+                    <span>confidence</span>
                     <span id="r-confidence-pct">0%</span>
                 </div>
                 <div class="confidence-bar">
@@ -517,7 +918,7 @@
 
             <!-- Labels -->
             <div>
-                <div class="label">Suggested Labels</div>
+                <div class="label">suggested_labels[]</div>
                 <div class="label-list" id="r-labels"></div>
             </div>
 
@@ -526,27 +927,150 @@
 
             <!-- Signals -->
             <details class="signals" id="r-signals-section">
-                <summary>View triggered signals</summary>
+                <summary>▸ view triggered signals</summary>
                 <ul id="r-signals"></ul>
             </details>
         </div>
     </div>
 </main>
 
-<!-- ── Footer ───────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- FEATURES                                                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>🧩 <span class="accent">Features</span></h2>
+    <span class="section-tag">// what you get</span>
+</div>
+
+<div class="features">
+    <div class="feature-card">
+        <div class="feature-icon">🏷️</div>
+        <h3>Type Classification</h3>
+        <p>Detects <code>bug</code>, <code>feature-request</code>, <code>question</code>, <code>regression</code>, and <code>docs</code> using 35+ battle-tested regex patterns.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Urgency Scoring</h3>
+        <p>4-tier priority system (<code>p0</code>–<code>p3</code>) with weighted signals: security vulns, regressions, production outages, CVE references.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>Sentiment Analysis</h3>
+        <p>5-class sentiment detection — <code>frustrated</code>, <code>negative</code>, <code>neutral</code>, <code>constructive</code>, <code>positive</code> — to prioritize unhappy users.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>GitHub Action</h3>
+        <p>Drop <code>kustonaut/issue-sentinel@v1</code> into any workflow. Auto-labels every new issue. Zero config.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Optional LLM Mode</h3>
+        <p>Enable <code>--llm</code> for GPT/Claude-powered classification when regex falls short. Graceful fallback to rules.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <h3>Fully Tested</h3>
+        <p>48 unit tests, 100% CI on Python 3.10–3.12, strict mypy, ruff linting. Ship with confidence.</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                            -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
 <footer class="footer">
+    <div class="ascii-art">
+ ██╗███████╗███████╗██╗   ██╗███████╗
+ ██║██╔════╝██╔════╝██║   ██║██╔════╝
+ ██║███████╗███████╗██║   ██║█████╗
+ ██║╚════██║╚════██║██║   ██║██╔══╝
+ ██║███████║███████║╚██████╔╝███████╗
+ ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚══════╝
+ ███████╗███████╗███╗   ██╗████████╗██╗███╗   ██╗███████╗██╗
+ ██╔════╝██╔════╝████╗  ██║╚══██╔══╝██║████╗  ██║██╔════╝██║
+ ███████╗█████╗  ██╔██╗ ██║   ██║   ██║██╔██╗ ██║█████╗  ██║
+ ╚════██║██╔══╝  ██║╚██╗██║   ██║   ██║██║╚██╗██║██╔══╝  ██║
+ ███████║███████╗██║ ╚████║   ██║   ██║██║ ╚████║███████╗███████╗
+ ╚══════╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝
+    </div>
     <p>
-        <strong>Issue Sentinel</strong> by <a href="https://github.com/kustonaut" target="_blank">@kustonaut</a>
-        · <a href="https://github.com/kustonaut/issue-sentinel" target="_blank">GitHub</a>
+        <a href="https://github.com/kustonaut/issue-sentinel" target="_blank">GitHub</a>
         · <a href="https://pypi.org/project/issue-sentinel/" target="_blank">PyPI</a>
+        · <a href="https://github.com/kustonaut" target="_blank">@kustonaut</a>
         · MIT License
     </p>
-    <p style="margin-top:0.5rem; font-size:0.8rem;">
-        Built by a PM who manages 6,000+ GitHub issues. This demo runs entirely in your browser — no data is sent anywhere.
+    <p style="margin-top:0.5rem; font-size:0.7rem;">
+        Built by a PM who triages 6,000+ GitHub issues. This demo runs entirely in your browser — no data leaves your machine.
     </p>
 </footer>
 
 <script>
+// ══════════════════════════════════════════════════════════════════════════
+// Typing Animation
+// ══════════════════════════════════════════════════════════════════════════
+
+const TYPED_STRINGS = [
+    "classify(issue) → { type, urgency, sentiment }",
+    "35+ regex patterns · zero API keys · instant results",
+    "pip install issue-sentinel && issue-sentinel classify",
+    "from frustrated user → p0 label in < 50ms",
+    "uses: kustonaut/issue-sentinel@v1  # done.",
+];
+
+let typedIdx = 0, charIdx = 0, isDeleting = false;
+const typedEl = document.getElementById("typed-text");
+
+function typeLoop() {
+    const current = TYPED_STRINGS[typedIdx];
+    if (!isDeleting) {
+        typedEl.textContent = current.substring(0, charIdx++);
+        if (charIdx > current.length) {
+            isDeleting = true;
+            setTimeout(typeLoop, 2000);
+            return;
+        }
+        setTimeout(typeLoop, 45);
+    } else {
+        typedEl.textContent = current.substring(0, charIdx--);
+        if (charIdx < 0) {
+            isDeleting = false;
+            typedIdx = (typedIdx + 1) % TYPED_STRINGS.length;
+            charIdx = 0;
+            setTimeout(typeLoop, 400);
+            return;
+        }
+        setTimeout(typeLoop, 25);
+    }
+}
+typeLoop();
+
+// ══════════════════════════════════════════════════════════════════════════
+// Animated Stat Counters
+// ══════════════════════════════════════════════════════════════════════════
+
+function animateCounter(el, target, suffix = '') {
+    let current = 0;
+    const step = Math.ceil(target / 40);
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = current + suffix;
+    }, 30);
+}
+
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            animateCounter(document.getElementById("stat-patterns"), 35, "+");
+            animateCounter(document.getElementById("stat-urgency"), 23);
+            animateCounter(document.getElementById("stat-sentiment"), 28);
+            animateCounter(document.getElementById("stat-actions"), 5);
+            observer.disconnect();
+        }
+    });
+}, { threshold: 0.5 });
+observer.observe(document.querySelector(".stats-bar"));
+
 // ══════════════════════════════════════════════════════════════════════════
 // Issue Sentinel — Client-Side Classification Engine
 // This is a JavaScript port of the Python rule-based classifier.
@@ -692,16 +1216,13 @@ function patternScore(text, patterns) {
 }
 
 function detectType(text) {
-    // Regression takes priority
     if (patternScore(text, REGRESSION_PATTERNS) > 0) return "regression";
-
     const scores = {
         "bug": patternScore(text, BUG_PATTERNS),
         "feature-request": patternScore(text, FEATURE_PATTERNS),
         "question": patternScore(text, QUESTION_PATTERNS),
         "docs": patternScore(text, DOCS_PATTERNS),
     };
-
     let best = "unknown", bestScore = 0;
     for (const [type, score] of Object.entries(scores)) {
         if (score > bestScore) { best = type; bestScore = score; }
@@ -755,14 +1276,12 @@ function scoreSentiment(text) {
         }
     }
     total = Math.max(-1, Math.min(1, total));
-
     let sentiment;
     if (total <= -0.5) sentiment = "frustrated";
     else if (total <= -0.1) sentiment = "negative";
     else if (total >= 0.3) sentiment = "positive";
     else if (total >= 0.1) sentiment = "constructive";
     else sentiment = "neutral";
-
     return { sentiment, score: total, signals };
 }
 
@@ -772,21 +1291,18 @@ function classify(title, body) {
     const confidence = typeConfidence(text, type);
     const urgency = scoreUrgency(text);
     const sentiment = scoreSentiment(text);
-
     const labels = [];
     if (type !== "unknown") labels.push({ text: type, cls: "type" });
     if (urgency.priority !== "p3") labels.push({ text: urgency.priority, cls: "urgency" });
     if (sentiment.sentiment !== "neutral") labels.push({ text: `sentiment:${sentiment.sentiment}`, cls: "sentiment" });
-
     return {
-        type,
-        area: "unassigned",
+        type, area: "unassigned",
         confidence: Math.max(confidence, 0.1),
         urgency: urgency.score,
         priority: urgency.priority,
         sentiment: sentiment.sentiment,
         labels,
-        reasoning: `Type: ${type} (confidence: ${Math.round(confidence * 100)}%) | Urgency: ${urgency.priority} (${Math.round(urgency.score * 100)}%)`,
+        reasoning: `type: ${type} (${Math.round(confidence * 100)}%) → urgency: ${urgency.priority} (${Math.round(urgency.score * 100)}%)`,
         urgencySignals: urgency.signals,
         sentimentSignals: sentiment.signals,
     };
@@ -795,9 +1311,6 @@ function classify(title, body) {
 // ── GitHub URL Import ───────────────────────────────────────────────
 
 function parseGitHubUrl(url) {
-    // Supports: https://github.com/owner/repo/issues/123
-    //           github.com/owner/repo/issues/123
-    //           owner/repo#123
     const full = url.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/);
     if (full) return { owner: full[1], repo: full[2], number: full[3] };
     const short = url.match(/^([^/]+)\/([^#]+)#(\d+)$/);
@@ -820,7 +1333,7 @@ async function fetchGitHubIssue() {
     const parsed = parseGitHubUrl(url);
     if (!parsed) { showFetchError("Invalid format. Use: https://github.com/owner/repo/issues/123 or owner/repo#123"); return; }
 
-    fetchBtn.textContent = "⏳ Loading…";
+    fetchBtn.textContent = "⏳ ...";
     fetchBtn.disabled = true;
 
     try {
@@ -841,41 +1354,36 @@ async function fetchGitHubIssue() {
             return;
         }
 
-        // Populate fields
         document.getElementById("issue-title").value = issue.title;
         document.getElementById("issue-body").value = stripMarkdownImages(issue.body || "");
 
-        // Show metadata
         document.getElementById("fetch-repo").textContent = `${parsed.owner}/${parsed.repo}#${parsed.number}`;
         const stateEmoji = issue.state === "open" ? "🟢 open" : "🔴 closed";
         document.getElementById("fetch-state").textContent = stateEmoji;
 
         const labelsHtml = (issue.labels || [])
-            .map(l => `<span style="padding:0.1rem 0.4rem; border-radius:12px; font-size:0.7rem; border:1px solid #${l.color || '30363d'}; color:#${l.color || 'e6edf3'}; margin-left:0.3rem;">${l.name}</span>`)
+            .map(l => `<span style="padding:0.1rem 0.4rem; border-radius:4px; font-size:0.65rem; font-family:var(--mono); border:1px solid #${l.color || '30363d'}; color:#${l.color || 'e6edf3'}; margin-left:0.3rem;">${l.name}</span>`)
             .join("");
         document.getElementById("fetch-labels").innerHTML = labelsHtml;
 
         metaEl.classList.remove("hidden");
-
-        // Auto-classify
         classifyIssue();
 
     } catch (err) {
         showFetchError(err.message);
     } finally {
-        fetchBtn.textContent = "📥 Fetch";
+        fetchBtn.textContent = "📥 FETCH";
         fetchBtn.disabled = false;
     }
 }
 
 function showFetchError(msg) {
     const el = document.getElementById("fetch-error");
-    el.textContent = msg;
+    el.textContent = "✗ " + msg;
     el.style.display = "block";
 }
 
 function stripMarkdownImages(text) {
-    // Remove markdown images that bloat the body
     return text.replace(/!\[([^\]]*)\]\([^)]+\)/g, "[image: $1]").substring(0, 5000);
 }
 
@@ -908,65 +1416,42 @@ function urgencyColor(score) {
 }
 
 const SENTIMENT_EMOJI = {
-    frustrated: "😤",
-    negative: "😕",
-    neutral: "😐",
-    constructive: "🔨",
-    positive: "😊",
+    frustrated: "😤", negative: "😕", neutral: "😐",
+    constructive: "🔨", positive: "😊",
 };
-
 const PRIORITY_EMOJI = {
-    p0: "🔴",
-    p1: "🟠",
-    p2: "🟡",
-    p3: "🟢",
+    p0: "🔴", p1: "🟠", p2: "🟡", p3: "🟢",
 };
-
 const TYPE_EMOJI = {
-    bug: "🐛",
-    "feature-request": "✨",
-    question: "❓",
-    regression: "🔄",
-    docs: "📄",
-    enhancement: "⚡",
-    unknown: "❔",
+    bug: "🐛", "feature-request": "✨", question: "❓",
+    regression: "🔄", docs: "📄", enhancement: "⚡", unknown: "❔",
 };
 
 function classifyIssue() {
     const title = document.getElementById("issue-title").value.trim();
     const body = document.getElementById("issue-body").value.trim();
-
     if (!title && !body) return;
 
     const r = classify(title, body);
 
-    // Show results
     document.getElementById("results-placeholder").classList.add("hidden");
     document.getElementById("results-content").classList.remove("hidden");
 
-    // Type + Area
     document.getElementById("r-type").textContent = `${TYPE_EMOJI[r.type] || ""} ${r.type}`;
     document.getElementById("r-area").textContent = r.area;
-
-    // Sentiment
     document.getElementById("r-sentiment").textContent = `${SENTIMENT_EMOJI[r.sentiment] || ""} ${r.sentiment}`;
-
-    // Priority
     document.getElementById("r-priority").textContent = `${PRIORITY_EMOJI[r.priority] || ""} ${r.priority}`;
 
-    // Urgency bar
     const urgPct = Math.round(r.urgency * 100);
     document.getElementById("r-urgency-pct").textContent = `${urgPct}%`;
     const urgBar = document.getElementById("r-urgency-bar");
     urgBar.style.width = `${urgPct}%`;
     urgBar.style.background = urgencyColor(r.urgency);
 
-    // Confidence bar
     const confPct = Math.round(r.confidence * 100);
     document.getElementById("r-confidence-pct").textContent = `${confPct}%`;
     document.getElementById("r-confidence-bar").style.width = `${confPct}%`;
 
-    // Labels
     const labelContainer = document.getElementById("r-labels");
     labelContainer.innerHTML = "";
     for (const l of r.labels) {
@@ -976,13 +1461,11 @@ function classifyIssue() {
         labelContainer.appendChild(span);
     }
     if (r.labels.length === 0) {
-        labelContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem">No labels triggered</span>';
+        labelContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.8rem; font-family:var(--mono)">// no labels triggered</span>';
     }
 
-    // Reasoning
-    document.getElementById("r-reasoning").innerHTML = `<strong>Reasoning:</strong> ${r.reasoning}`;
+    document.getElementById("r-reasoning").innerHTML = `<strong>→</strong> ${r.reasoning}`;
 
-    // Signals
     const signalList = document.getElementById("r-signals");
     signalList.innerHTML = "";
     const allSignals = [
@@ -1001,17 +1484,14 @@ function classifyIssue() {
     }
 }
 
-// Classify on Enter in title field
+// ── Keyboard Shortcuts ──────────────────────────────────────────────
+
 document.getElementById("issue-title").addEventListener("keydown", e => {
     if (e.key === "Enter") classifyIssue();
 });
-
-// Fetch on Enter in URL field
 document.getElementById("github-url").addEventListener("keydown", e => {
     if (e.key === "Enter") fetchGitHubIssue();
 });
-
-// Auto-detect pasted GitHub URLs — if user pastes a URL into the URL field, auto-fetch
 document.getElementById("github-url").addEventListener("paste", () => {
     setTimeout(fetchGitHubIssue, 100);
 });
