@@ -359,7 +359,7 @@
 <!-- ── Hero ──────────────────────────────────────── -->
 <header class="hero">
     <h1>🛡️ Issue <span>Sentinel</span></h1>
-    <p>AI-powered GitHub issue triage. Classify, prioritize, and route issues automatically — try it live.</p>
+    <p>AI-powered GitHub issue triage. Paste any public GitHub issue URL or enter text manually — classify it live.</p>
     <div class="badge-row">
         <span class="badge">Python 3.10+</span>
         <span class="badge">Rule-Based + LLM</span>
@@ -409,6 +409,25 @@
     <!-- Left: Input -->
     <div class="card">
         <h2>📝 Paste an Issue</h2>
+
+        <!-- GitHub URL Import -->
+        <label for="github-url">Import from GitHub</label>
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <input type="text" id="github-url" placeholder="https://github.com/owner/repo/issues/123" style="margin-bottom:0; flex:1;">
+            <button class="btn" onclick="fetchGitHubIssue()" style="width:auto; white-space:nowrap;" id="fetch-btn">📥 Fetch</button>
+        </div>
+        <div id="fetch-error" style="color:var(--red); font-size:0.8rem; margin:-0.5rem 0 0.75rem; display:none;"></div>
+        <div id="fetch-meta" class="hidden" style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.8rem; color:var(--text-muted);">
+            <span id="fetch-repo" style="color:var(--accent);"></span>
+            <span id="fetch-labels" style="margin-left:0.5rem;"></span>
+            <span id="fetch-state" style="float:right;"></span>
+        </div>
+
+        <div style="position:relative; text-align:center; margin-bottom:1rem;">
+            <hr style="border:none; border-top:1px solid var(--border);">
+            <span style="position:absolute; top:-0.6rem; left:50%; transform:translateX(-50%); background:var(--surface); padding:0 0.5rem; color:var(--text-muted); font-size:0.75rem;">or enter manually</span>
+        </div>
+
         <label for="issue-title">Title</label>
         <input type="text" id="issue-title" placeholder="e.g., API returns 500 on login endpoint">
 
@@ -773,17 +792,110 @@ function classify(title, body) {
     };
 }
 
+// ── GitHub URL Import ───────────────────────────────────────────────
+
+function parseGitHubUrl(url) {
+    // Supports: https://github.com/owner/repo/issues/123
+    //           github.com/owner/repo/issues/123
+    //           owner/repo#123
+    const full = url.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/);
+    if (full) return { owner: full[1], repo: full[2], number: full[3] };
+    const short = url.match(/^([^/]+)\/([^#]+)#(\d+)$/);
+    if (short) return { owner: short[1], repo: short[2], number: short[3] };
+    return null;
+}
+
+async function fetchGitHubIssue() {
+    const urlInput = document.getElementById("github-url");
+    const errorEl = document.getElementById("fetch-error");
+    const metaEl = document.getElementById("fetch-meta");
+    const fetchBtn = document.getElementById("fetch-btn");
+    const url = urlInput.value.trim();
+
+    errorEl.style.display = "none";
+    metaEl.classList.add("hidden");
+
+    if (!url) { showFetchError("Paste a GitHub issue URL"); return; }
+
+    const parsed = parseGitHubUrl(url);
+    if (!parsed) { showFetchError("Invalid format. Use: https://github.com/owner/repo/issues/123 or owner/repo#123"); return; }
+
+    fetchBtn.textContent = "⏳ Loading…";
+    fetchBtn.disabled = true;
+
+    try {
+        const resp = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/issues/${parsed.number}`, {
+            headers: { "Accept": "application/vnd.github.v3+json" }
+        });
+
+        if (!resp.ok) {
+            if (resp.status === 404) throw new Error("Issue not found. Is it a public repo?");
+            if (resp.status === 403) throw new Error("GitHub API rate limit. Try again in a minute.");
+            throw new Error(`GitHub API error: ${resp.status}`);
+        }
+
+        const issue = await resp.json();
+
+        if (issue.pull_request) {
+            showFetchError("That's a pull request, not an issue. Try an issue URL.");
+            return;
+        }
+
+        // Populate fields
+        document.getElementById("issue-title").value = issue.title;
+        document.getElementById("issue-body").value = stripMarkdownImages(issue.body || "");
+
+        // Show metadata
+        document.getElementById("fetch-repo").textContent = `${parsed.owner}/${parsed.repo}#${parsed.number}`;
+        const stateEmoji = issue.state === "open" ? "🟢 open" : "🔴 closed";
+        document.getElementById("fetch-state").textContent = stateEmoji;
+
+        const labelsHtml = (issue.labels || [])
+            .map(l => `<span style="padding:0.1rem 0.4rem; border-radius:12px; font-size:0.7rem; border:1px solid #${l.color || '30363d'}; color:#${l.color || 'e6edf3'}; margin-left:0.3rem;">${l.name}</span>`)
+            .join("");
+        document.getElementById("fetch-labels").innerHTML = labelsHtml;
+
+        metaEl.classList.remove("hidden");
+
+        // Auto-classify
+        classifyIssue();
+
+    } catch (err) {
+        showFetchError(err.message);
+    } finally {
+        fetchBtn.textContent = "📥 Fetch";
+        fetchBtn.disabled = false;
+    }
+}
+
+function showFetchError(msg) {
+    const el = document.getElementById("fetch-error");
+    el.textContent = msg;
+    el.style.display = "block";
+}
+
+function stripMarkdownImages(text) {
+    // Remove markdown images that bloat the body
+    return text.replace(/!\[([^\]]*)\]\([^)]+\)/g, "[image: $1]").substring(0, 5000);
+}
+
 // ── UI Functions ────────────────────────────────────────────────────
 
 function loadSample(idx) {
     document.getElementById("issue-title").value = SAMPLES[idx].title;
     document.getElementById("issue-body").value = SAMPLES[idx].body;
+    document.getElementById("github-url").value = "";
+    document.getElementById("fetch-meta").classList.add("hidden");
+    document.getElementById("fetch-error").style.display = "none";
     classifyIssue();
 }
 
 function clearAll() {
     document.getElementById("issue-title").value = "";
     document.getElementById("issue-body").value = "";
+    document.getElementById("github-url").value = "";
+    document.getElementById("fetch-meta").classList.add("hidden");
+    document.getElementById("fetch-error").style.display = "none";
     document.getElementById("results-placeholder").classList.remove("hidden");
     document.getElementById("results-content").classList.add("hidden");
 }
@@ -892,6 +1004,16 @@ function classifyIssue() {
 // Classify on Enter in title field
 document.getElementById("issue-title").addEventListener("keydown", e => {
     if (e.key === "Enter") classifyIssue();
+});
+
+// Fetch on Enter in URL field
+document.getElementById("github-url").addEventListener("keydown", e => {
+    if (e.key === "Enter") fetchGitHubIssue();
+});
+
+// Auto-detect pasted GitHub URLs — if user pastes a URL into the URL field, auto-fetch
+document.getElementById("github-url").addEventListener("paste", () => {
+    setTimeout(fetchGitHubIssue, 100);
 });
 </script>
 
