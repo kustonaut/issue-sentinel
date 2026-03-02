@@ -658,141 +658,6 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
-<!-- ARCHITECTURE                                                      -->
-<!-- ══════════════════════════════════════════════════════════════════ -->
-<div class="section-title">
-    <h2>⚙️ <span class="accent">Architecture</span></h2>
-    <span class="section-tag">// how it works</span>
-</div>
-
-<div class="arch-section">
-    <div class="arch-diagram">
-        <svg class="arch-svg" viewBox="0 0 1000 280" xmlns="http://www.w3.org/2000/svg">
-            <!-- Animated flow lines -->
-            <defs>
-                <linearGradient id="flow" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0"/>
-                    <stop offset="50%" style="stop-color:#58a6ff;stop-opacity:1"/>
-                    <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:0"/>
-                    <animate attributeName="x1" values="-100%;100%" dur="3s" repeatCount="indefinite"/>
-                    <animate attributeName="x2" values="0%;200%" dur="3s" repeatCount="indefinite"/>
-                </linearGradient>
-                <linearGradient id="flow2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#bc8cff;stop-opacity:0"/>
-                    <stop offset="50%" style="stop-color:#bc8cff;stop-opacity:1"/>
-                    <stop offset="100%" style="stop-color:#bc8cff;stop-opacity:0"/>
-                    <animate attributeName="x1" values="-100%;100%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
-                    <animate attributeName="x2" values="0%;200%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
-                </linearGradient>
-                <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-            </defs>
-
-            <!-- Connection lines -->
-            <line x1="185" y1="100" x2="240" y2="100" stroke="url(#flow)" stroke-width="2"/>
-            <line x1="390" y1="75" x2="450" y2="75" stroke="url(#flow)" stroke-width="2"/>
-            <line x1="390" y1="100" x2="450" y2="125" stroke="url(#flow2)" stroke-width="2"/>
-            <line x1="390" y1="125" x2="450" y2="175" stroke="url(#flow)" stroke-width="2"/>
-            <line x1="605" y1="75" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
-            <line x1="605" y1="125" x2="660" y2="100" stroke="url(#flow2)" stroke-width="2"/>
-            <line x1="605" y1="175" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
-            <line x1="820" y1="100" x2="870" y2="100" stroke="url(#flow)" stroke-width="2"/>
-
-            <!-- Node: Input -->
-            <rect x="20" y="60" width="165" height="80" rx="8" fill="#131922" stroke="#1e2d3d" stroke-width="1.5"/>
-            <text x="103" y="88" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📥 INPUT</text>
-            <text x="103" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">GitHub Issue</text>
-            <text x="103" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">title + body + URL</text>
-
-            <!-- Node: Parser -->
-            <rect x="240" y="60" width="150" height="80" rx="8" fill="#131922" stroke="#2d4a5e" stroke-width="1.5"/>
-            <text x="315" y="88" text-anchor="middle" fill="#39d2c0" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🔬 PARSER</text>
-            <text x="315" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Tokenize &amp; normalize</text>
-            <text x="315" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">extract signals</text>
-
-            <!-- Node: Type Classifier -->
-            <rect x="450" y="40" width="155" height="55" rx="8" fill="#131922" stroke="#58a6ff" stroke-width="1.5"/>
-            <text x="528" y="62" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🏷️ TYPE</text>
-            <text x="528" y="80" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">bug · feature · question</text>
-
-            <!-- Node: Urgency Scorer -->
-            <rect x="450" y="105" width="155" height="55" rx="8" fill="#131922" stroke="#f85149" stroke-width="1.5"/>
-            <text x="528" y="127" text-anchor="middle" fill="#f85149" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🎯 URGENCY</text>
-            <text x="528" y="145" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">p0 · p1 · p2 · p3</text>
-
-            <!-- Node: Sentiment Analyzer -->
-            <rect x="450" y="170" width="155" height="55" rx="8" fill="#131922" stroke="#d29922" stroke-width="1.5"/>
-            <text x="528" y="192" text-anchor="middle" fill="#d29922" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">💬 SENTIMENT</text>
-            <text x="528" y="210" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">frustrated → positive</text>
-
-            <!-- Node: Merge -->
-            <rect x="660" y="60" width="160" height="80" rx="8" fill="#131922" stroke="#bc8cff" stroke-width="1.5"/>
-            <text x="740" y="88" text-anchor="middle" fill="#bc8cff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🧬 MERGE</text>
-            <text x="740" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Weighted fusion</text>
-            <text x="740" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">confidence scoring</text>
-
-            <!-- Node: Output -->
-            <rect x="870" y="55" width="115" height="90" rx="8" fill="#131922" stroke="#3fb950" stroke-width="2" filter="url(#glow)"/>
-            <text x="928" y="82" text-anchor="middle" fill="#3fb950" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📊 OUTPUT</text>
-            <text x="928" y="100" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">labels[]</text>
-            <text x="928" y="114" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">priority</text>
-            <text x="928" y="128" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">routing</text>
-
-            <!-- Optional LLM branch -->
-            <rect x="240" y="190" width="150" height="55" rx="8" fill="#131922" stroke="#30363d" stroke-dasharray="5,5" stroke-width="1"/>
-            <text x="315" y="212" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600">🤖 LLM</text>
-            <text x="315" y="230" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">optional · GPT / Claude</text>
-            <line x1="315" y1="190" x2="315" y2="140" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
-            <text x="340" y="172" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="7">fallback</text>
-
-            <!-- Legend -->
-            <text x="20" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">─── deterministic flow</text>
-            <text x="200" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">┈┈┈ optional LLM path</text>
-            <text x="400" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">⬡ parallel analyzers run concurrently</text>
-        </svg>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════ -->
-<!-- QUICK START                                                       -->
-<!-- ══════════════════════════════════════════════════════════════════ -->
-<div class="section-title">
-    <h2>🚀 <span class="accent">Quick Start</span></h2>
-    <span class="section-tag">// 3 ways to run</span>
-</div>
-
-<div class="terminal">
-    <div class="term-window">
-        <div class="term-bar">
-            <span class="term-dot red"></span>
-            <span class="term-dot yellow"></span>
-            <span class="term-dot green"></span>
-            <span class="term-tab">terminal</span>
-        </div>
-        <div class="term-body">
-<span class="comment"># ── Install ──────────────────────────────────────────────</span>
-<span class="prompt">$</span> <span class="cmd">pip install</span> <span class="str">issue-sentinel</span>
-
-<span class="comment"># ── CLI: classify a single issue ─────────────────────────</span>
-<span class="prompt">$</span> <span class="cmd">issue-sentinel classify</span> <span class="flag">--title</span> <span class="str">"Login API returns 500"</span> \
-    <span class="flag">--body</span> <span class="str">"Crashes after upgrade to v3, was working in v2.9"</span>
-
-<span class="output">  type:       </span><span class="highlight">regression</span>    <span class="output">confidence: </span><span class="warn">0.60</span>
-<span class="output">  urgency:    </span><span class="warn">p1</span>            <span class="output">score:      </span><span class="warn">0.60</span>
-<span class="output">  sentiment:  </span><span class="str">negative</span>      <span class="output">labels:     </span><span class="highlight">[regression, p1]</span>
-
-<span class="comment"># ── GitHub Action: auto-triage on every new issue ────────</span>
-<span class="comment"># .github/workflows/triage.yml</span>
-<span class="prompt">uses:</span> <span class="str">kustonaut/issue-sentinel@v1</span>
-<span class="prompt">with:</span>
-  <span class="flag">github-token:</span> <span class="str">${{ secrets.GITHUB_TOKEN }}</span>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- LIVE DEMO                                                         -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div class="section-title">
@@ -933,6 +798,141 @@
         </div>
     </div>
 </main>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ARCHITECTURE                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>⚙️ <span class="accent">Architecture</span></h2>
+    <span class="section-tag">// how it works</span>
+</div>
+
+<div class="arch-section">
+    <div class="arch-diagram">
+        <svg class="arch-svg" viewBox="0 0 1000 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- Animated flow lines -->
+            <defs>
+                <linearGradient id="flow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0"/>
+                    <stop offset="50%" style="stop-color:#58a6ff;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:0"/>
+                    <animate attributeName="x1" values="-100%;100%" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="x2" values="0%;200%" dur="3s" repeatCount="indefinite"/>
+                </linearGradient>
+                <linearGradient id="flow2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#bc8cff;stop-opacity:0"/>
+                    <stop offset="50%" style="stop-color:#bc8cff;stop-opacity:1"/>
+                    <stop offset="100%" style="stop-color:#bc8cff;stop-opacity:0"/>
+                    <animate attributeName="x1" values="-100%;100%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+                    <animate attributeName="x2" values="0%;200%" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+                </linearGradient>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+            </defs>
+
+            <!-- Connection lines -->
+            <line x1="185" y1="100" x2="240" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="390" y1="75" x2="450" y2="75" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="390" y1="100" x2="450" y2="125" stroke="url(#flow2)" stroke-width="2"/>
+            <line x1="390" y1="125" x2="450" y2="175" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="605" y1="75" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="605" y1="125" x2="660" y2="100" stroke="url(#flow2)" stroke-width="2"/>
+            <line x1="605" y1="175" x2="660" y2="100" stroke="url(#flow)" stroke-width="2"/>
+            <line x1="820" y1="100" x2="870" y2="100" stroke="url(#flow)" stroke-width="2"/>
+
+            <!-- Node: Input -->
+            <rect x="20" y="60" width="165" height="80" rx="8" fill="#131922" stroke="#1e2d3d" stroke-width="1.5"/>
+            <text x="103" y="88" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📥 INPUT</text>
+            <text x="103" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">GitHub Issue</text>
+            <text x="103" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">title + body + URL</text>
+
+            <!-- Node: Parser -->
+            <rect x="240" y="60" width="150" height="80" rx="8" fill="#131922" stroke="#2d4a5e" stroke-width="1.5"/>
+            <text x="315" y="88" text-anchor="middle" fill="#39d2c0" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🔬 PARSER</text>
+            <text x="315" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Tokenize &amp; normalize</text>
+            <text x="315" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">extract signals</text>
+
+            <!-- Node: Type Classifier -->
+            <rect x="450" y="40" width="155" height="55" rx="8" fill="#131922" stroke="#58a6ff" stroke-width="1.5"/>
+            <text x="528" y="62" text-anchor="middle" fill="#58a6ff" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🏷️ TYPE</text>
+            <text x="528" y="80" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">bug · feature · question</text>
+
+            <!-- Node: Urgency Scorer -->
+            <rect x="450" y="105" width="155" height="55" rx="8" fill="#131922" stroke="#f85149" stroke-width="1.5"/>
+            <text x="528" y="127" text-anchor="middle" fill="#f85149" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">🎯 URGENCY</text>
+            <text x="528" y="145" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">p0 · p1 · p2 · p3</text>
+
+            <!-- Node: Sentiment Analyzer -->
+            <rect x="450" y="170" width="155" height="55" rx="8" fill="#131922" stroke="#d29922" stroke-width="1.5"/>
+            <text x="528" y="192" text-anchor="middle" fill="#d29922" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700">💬 SENTIMENT</text>
+            <text x="528" y="210" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">frustrated → positive</text>
+
+            <!-- Node: Merge -->
+            <rect x="660" y="60" width="160" height="80" rx="8" fill="#131922" stroke="#bc8cff" stroke-width="1.5"/>
+            <text x="740" y="88" text-anchor="middle" fill="#bc8cff" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">🧬 MERGE</text>
+            <text x="740" y="108" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">Weighted fusion</text>
+            <text x="740" y="123" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="9">confidence scoring</text>
+
+            <!-- Node: Output -->
+            <rect x="870" y="55" width="115" height="90" rx="8" fill="#131922" stroke="#3fb950" stroke-width="2" filter="url(#glow)"/>
+            <text x="928" y="82" text-anchor="middle" fill="#3fb950" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">📊 OUTPUT</text>
+            <text x="928" y="100" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">labels[]</text>
+            <text x="928" y="114" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">priority</text>
+            <text x="928" y="128" text-anchor="middle" fill="#6e7e8e" font-family="JetBrains Mono, monospace" font-size="8">routing</text>
+
+            <!-- Optional LLM branch -->
+            <rect x="240" y="190" width="150" height="55" rx="8" fill="#131922" stroke="#30363d" stroke-dasharray="5,5" stroke-width="1"/>
+            <text x="315" y="212" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600">🤖 LLM</text>
+            <text x="315" y="230" text-anchor="middle" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">optional · GPT / Claude</text>
+            <line x1="315" y1="190" x2="315" y2="140" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="340" y="172" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="7">fallback</text>
+
+            <!-- Legend -->
+            <text x="20" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">─── deterministic flow</text>
+            <text x="200" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">┈┈┈ optional LLM path</text>
+            <text x="400" y="270" fill="#546e7a" font-family="JetBrains Mono, monospace" font-size="8">⬡ parallel analyzers run concurrently</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- QUICK START                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">
+    <h2>🚀 <span class="accent">Quick Start</span></h2>
+    <span class="section-tag">// 3 ways to run</span>
+</div>
+
+<div class="terminal">
+    <div class="term-window">
+        <div class="term-bar">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+            <span class="term-tab">terminal</span>
+        </div>
+        <div class="term-body">
+<span class="comment"># ── Install ──────────────────────────────────────────────</span>
+<span class="prompt">$</span> <span class="cmd">pip install</span> <span class="str">issue-sentinel</span>
+
+<span class="comment"># ── CLI: classify a single issue ─────────────────────────</span>
+<span class="prompt">$</span> <span class="cmd">issue-sentinel classify</span> <span class="flag">--title</span> <span class="str">"Login API returns 500"</span> \
+    <span class="flag">--body</span> <span class="str">"Crashes after upgrade to v3, was working in v2.9"</span>
+
+<span class="output">  type:       </span><span class="highlight">regression</span>    <span class="output">confidence: </span><span class="warn">0.60</span>
+<span class="output">  urgency:    </span><span class="warn">p1</span>            <span class="output">score:      </span><span class="warn">0.60</span>
+<span class="output">  sentiment:  </span><span class="str">negative</span>      <span class="output">labels:     </span><span class="highlight">[regression, p1]</span>
+
+<span class="comment"># ── GitHub Action: auto-triage on every new issue ────────</span>
+<span class="comment"># .github/workflows/triage.yml</span>
+<span class="prompt">uses:</span> <span class="str">kustonaut/issue-sentinel@v1</span>
+<span class="prompt">with:</span>
+  <span class="flag">github-token:</span> <span class="str">${{ secrets.GITHUB_TOKEN }}</span>
+        </div>
+    </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- FEATURES                                                          -->
