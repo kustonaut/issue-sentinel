@@ -16,7 +16,7 @@
 
 **AI-powered GitHub issue triage. Classify, prioritize, and route issues — zero manual effort.**
 
-> *Built by a PM who manages 6,000+ GitHub issues and got tired of morning triage marathons.*
+> *Because manual triage doesn't scale.*
 
 [**🎮 Live Demo**](https://kustonaut.github.io/issue-sentinel) · [**📦 PyPI**](https://pypi.org/project/issue-sentinel/) · [**🤝 Contributing**](CONTRIBUTING.md)
 
@@ -481,7 +481,7 @@ The MCP server, HTML report generator, and multi-repo support were inspired by a
 
 <div align="center">
 
-**Part of the [PM OS](https://github.com/kustonaut) ecosystem** — tools built by a PM who codes.
+**Part of the [@kustonaut](https://github.com/kustonaut) open-source ecosystem** — tools for engineering teams at scale.
 
 [**🎮 Try the Interactive Demo →**](https://kustonaut.github.io/issue-sentinel)
 
